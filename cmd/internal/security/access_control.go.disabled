@@ -1,0 +1,356 @@
+package security
+
+import (
+	"fmt"
+
+	"aegis/catalog"
+	"aegis/sctx"
+)
+
+// Test type for security processing
+type SecurityTestUser struct {
+	ID       string `json:"id"`
+	Email    string `json:"email" scope:"user:read"`
+	Password string `json:"password" scope:"admin"`
+	SSN      string `json:"ssn" validate:"ssn" scope:"admin"`
+	Salary   int    `json:"salary" scope:"hr:read"`
+}
+
+// TestAccessControl verifies permission-based access control
+func TestAccessControl() error {
+	pipeline := catalog.GetSecurityPipeline[SecurityTestUser]()
+	
+	// Register access control behavior
+	pipeline.Register(catalog.AccessControlBehavior, func(input catalog.SecurityInput[SecurityTestUser]) catalog.SecurityOutput[SecurityTestUser] {
+		if !input.Context.HasPermission("admin") {
+			return catalog.SecurityOutput[SecurityTestUser]{
+				Data: input.Data,
+				Error: &sctx.SecurityError{
+					Type: "forbidden",
+					Resource: "user:" + input.Data.ID,
+					Action: "access",
+					Message: "admin permission required",
+				},
+			}
+		}
+		return catalog.SecurityOutput[SecurityTestUser]{Data: input.Data, Error: nil}
+	})
+	
+	user := SecurityTestUser{ID: "123"}
+	
+	// Test access denied
+	userCtx := sctx.NewUserContext("user-1", []string{"user:read"})
+	_, err := catalog.Prepare(user, userCtx)
+	if err == nil {
+		return fmt.Errorf("expected access denied")
+	}
+	
+	// Test access granted
+	adminCtx := sctx.NewUserContext("admin-1", []string{"admin"})
+	result, err := catalog.Prepare(user, adminCtx)
+	if err != nil {
+		return fmt.Errorf("admin access should be granted: %v", err)
+	}
+	
+	if result.ID != "123" {
+		return fmt.Errorf("data corrupted during processing")
+	}
+	
+	return nil
+}
+
+// TestFieldRedaction verifies sensitive field redaction based on permissions
+func TestFieldRedaction() error {
+	// Use a different type to get a fresh pipeline
+	type RedactionTestUser struct {
+		ID       string `json:"id"`
+		Email    string `json:"email" scope:"user:read"`
+		Password string `json:"password" scope:"admin"`
+		SSN      string `json:"ssn" validate:"ssn" scope:"admin"`
+		Salary   int    `json:"salary" scope:"hr:read"`
+	}
+	
+	pipeline := catalog.GetSecurityPipeline[RedactionTestUser]()
+	
+	// Register redaction behavior
+	pipeline.Register(catalog.RedactionBehavior, func(input catalog.SecurityInput[RedactionTestUser]) catalog.SecurityOutput[RedactionTestUser] {
+		data := input.Data
+		
+		// Redact sensitive fields based on permissions
+		if !input.Context.HasPermission("admin") {
+			data.Password = "[REDACTED]"
+			data.SSN = "***-**-****"
+		}
+		
+		if !input.Context.HasPermission("hr:read") {
+			data.Salary = 0
+		}
+		
+		return catalog.SecurityOutput[RedactionTestUser]{Data: data, Error: nil}
+	})
+	
+	user := RedactionTestUser{
+		ID: "123",
+		Password: "secret",
+		SSN: "123-45-6789",
+		Salary: 100000,
+	}
+	
+	// Test basic user redaction
+	userCtx := sctx.NewUserContext("user-1", []string{"user:read"})
+	result, err := catalog.Prepare(user, userCtx)
+	if err != nil {
+		return fmt.Errorf("redaction failed: %v", err)
+	}
+	
+	if result.Password != "[REDACTED]" {
+		return fmt.Errorf("password not redacted")
+	}
+	
+	if result.SSN != "***-**-****" {
+		return fmt.Errorf("SSN not masked")
+	}
+	
+	if result.Salary != 0 {
+		return fmt.Errorf("salary not hidden")
+	}
+	
+	// Test admin access
+	adminCtx := sctx.NewUserContext("admin-1", []string{"admin", "hr:read"})
+	adminResult, err := catalog.Prepare(user, adminCtx)
+	if err != nil {
+		return fmt.Errorf("admin processing failed: %v", err)
+	}
+	
+	if adminResult.Password != "secret" {
+		return fmt.Errorf("admin should see real password")
+	}
+	
+	if adminResult.SSN != "123-45-6789" {
+		return fmt.Errorf("admin should see real SSN")
+	}
+	
+	return nil
+}
+
+// TestOrderedExecution verifies behaviors execute in registration order
+func TestOrderedExecution() error {
+	// Use fresh type for clean pipeline
+	type OrderTestUser struct {
+		ID string
+	}
+	
+	pipeline := catalog.GetSecurityPipeline[OrderTestUser]()
+	
+	// Track execution order
+	var executionOrder []string
+	
+	// Register behaviors that track execution
+	pipeline.Register(catalog.AccessControlBehavior, func(input catalog.SecurityInput[OrderTestUser]) catalog.SecurityOutput[OrderTestUser] {
+		executionOrder = append(executionOrder, "access")
+		return catalog.SecurityOutput[OrderTestUser]{Data: input.Data, Error: nil}
+	})
+	
+	pipeline.Register(catalog.RedactionBehavior, func(input catalog.SecurityInput[OrderTestUser]) catalog.SecurityOutput[OrderTestUser] {
+		executionOrder = append(executionOrder, "redaction")
+		return catalog.SecurityOutput[OrderTestUser]{Data: input.Data, Error: nil}
+	})
+	
+	pipeline.Register(catalog.AuditBehavior, func(input catalog.SecurityInput[OrderTestUser]) catalog.SecurityOutput[OrderTestUser] {
+		executionOrder = append(executionOrder, "audit")
+		return catalog.SecurityOutput[OrderTestUser]{Data: input.Data, Error: nil}
+	})
+	
+	// Execute pipeline
+	user := OrderTestUser{ID: "123"}
+	ctx := sctx.NewUserContext("user-1", []string{"user:read", "admin"})
+	
+	_, err := catalog.Prepare(user, ctx)
+	if err != nil {
+		return fmt.Errorf("pipeline execution failed: %v", err)
+	}
+	
+	// Verify execution order matches registration order
+	expectedOrder := []string{"access", "redaction", "audit"}
+	if len(executionOrder) != len(expectedOrder) {
+		return fmt.Errorf("expected %d executions, got %d", len(expectedOrder), len(executionOrder))
+	}
+	
+	for i, expected := range expectedOrder {
+		if executionOrder[i] != expected {
+			return fmt.Errorf("execution order mismatch at %d: expected %s, got %s", i, expected, executionOrder[i])
+		}
+	}
+	
+	return nil
+}
+
+// TestSecurityContext verifies security context integration
+func TestSecurityContext() error {
+	pipeline := catalog.GetSecurityPipeline[SecurityTestUser]()
+	
+	// Register behavior that uses security context
+	pipeline.Register(catalog.AccessControlBehavior, func(input catalog.SecurityInput[SecurityTestUser]) catalog.SecurityOutput[SecurityTestUser] {
+		// Test context methods
+		if input.Context.UserID == "" {
+			return catalog.SecurityOutput[SecurityTestUser]{
+				Data: input.Data,
+				Error: fmt.Errorf("user ID required"),
+			}
+		}
+		
+		if len(input.Context.Permissions) == 0 {
+			return catalog.SecurityOutput[SecurityTestUser]{
+				Data: input.Data,
+				Error: fmt.Errorf("permissions required"),
+			}
+		}
+		
+		// Test HasPermission method
+		if !input.Context.HasPermission("user:read") {
+			return catalog.SecurityOutput[SecurityTestUser]{
+				Data: input.Data,
+				Error: fmt.Errorf("user:read permission required"),
+			}
+		}
+		
+		return catalog.SecurityOutput[SecurityTestUser]{Data: input.Data, Error: nil}
+	})
+	
+	user := SecurityTestUser{ID: "123"}
+	
+	// Test with proper context
+	ctx := sctx.NewUserContext("user-123", []string{"user:read", "user:write"})
+	result, err := catalog.Prepare(user, ctx)
+	if err != nil {
+		return fmt.Errorf("security context test failed: %v", err)
+	}
+	
+	if result.ID != "123" {
+		return fmt.Errorf("data lost during context processing")
+	}
+	
+	return nil
+}
+
+// TestPermissionHierarchy verifies hierarchical permission handling
+func TestPermissionHierarchy() error {
+	type HierarchyUser struct {
+		ID      string
+		Level   string
+		Details string
+	}
+	
+	pipeline := catalog.GetSecurityPipeline[HierarchyUser]()
+	
+	// Register multi-level access control
+	pipeline.Register(catalog.AccessControlBehavior, func(input catalog.SecurityInput[HierarchyUser]) catalog.SecurityOutput[HierarchyUser] {
+		data := input.Data
+		
+		// Different data visibility based on permissions
+		if input.Context.HasPermission("admin") {
+			// Admin sees everything
+			return catalog.SecurityOutput[HierarchyUser]{Data: data, Error: nil}
+		}
+		
+		if input.Context.HasPermission("manager") {
+			// Manager sees limited details
+			data.Details = "[LIMITED]"
+			return catalog.SecurityOutput[HierarchyUser]{Data: data, Error: nil}
+		}
+		
+		if input.Context.HasPermission("user:read") {
+			// User sees minimal info
+			data.Level = "[HIDDEN]"
+			data.Details = "[HIDDEN]"
+			return catalog.SecurityOutput[HierarchyUser]{Data: data, Error: nil}
+		}
+		
+		// No permissions = no access
+		return catalog.SecurityOutput[HierarchyUser]{
+			Data: data,
+			Error: fmt.Errorf("insufficient permissions"),
+		}
+	})
+	
+	user := HierarchyUser{
+		ID:      "123",
+		Level:   "Senior",
+		Details: "Sensitive information",
+	}
+	
+	// Test different permission levels
+	adminCtx := sctx.NewUserContext("admin", []string{"admin"})
+	adminResult, _ := catalog.Prepare(user, adminCtx)
+	if adminResult.Details != "Sensitive information" {
+		return fmt.Errorf("admin should see all details")
+	}
+	
+	managerCtx := sctx.NewUserContext("manager", []string{"manager"})
+	managerResult, _ := catalog.Prepare(user, managerCtx)
+	if managerResult.Details != "[LIMITED]" {
+		return fmt.Errorf("manager should see limited details")
+	}
+	
+	userCtx := sctx.NewUserContext("user", []string{"user:read"})
+	userResult, _ := catalog.Prepare(user, userCtx)
+	if userResult.Level != "[HIDDEN]" || userResult.Details != "[HIDDEN]" {
+		return fmt.Errorf("user should see minimal info")
+	}
+	
+	return nil
+}
+
+// TestErrorPropagation verifies error handling in security pipeline
+func TestErrorPropagation() error {
+	type ErrorTestUser struct {
+		ID string
+	}
+	
+	pipeline := catalog.GetSecurityPipeline[ErrorTestUser]()
+	
+	// Register behavior that always returns error
+	pipeline.Register(catalog.AccessControlBehavior, func(input catalog.SecurityInput[ErrorTestUser]) catalog.SecurityOutput[ErrorTestUser] {
+		return catalog.SecurityOutput[ErrorTestUser]{
+			Data: input.Data,
+			Error: &sctx.SecurityError{
+				Type:     "test_error",
+				Resource: "test",
+				Action:   "test",
+				Message:  "This is a test error",
+			},
+		}
+	})
+	
+	// Register second behavior that should not execute
+	executedSecond := false
+	pipeline.Register(catalog.RedactionBehavior, func(input catalog.SecurityInput[ErrorTestUser]) catalog.SecurityOutput[ErrorTestUser] {
+		executedSecond = true
+		return catalog.SecurityOutput[ErrorTestUser]{Data: input.Data, Error: nil}
+	})
+	
+	// Execute pipeline
+	user := ErrorTestUser{ID: "123"}
+	ctx := sctx.NewUserContext("user", []string{"admin"})
+	
+	_, err := catalog.Prepare(user, ctx)
+	if err == nil {
+		return fmt.Errorf("expected error to propagate")
+	}
+	
+	if executedSecond {
+		return fmt.Errorf("second behavior should not execute after error")
+	}
+	
+	// Verify error type
+	secErr, ok := err.(*sctx.SecurityError)
+	if !ok {
+		return fmt.Errorf("expected SecurityError type")
+	}
+	
+	if secErr.Type != "test_error" {
+		return fmt.Errorf("error type mismatch")
+	}
+	
+	return nil
+}

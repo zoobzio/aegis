@@ -1,0 +1,429 @@
+package extensibility
+
+import (
+	"fmt"
+	"sync"
+	
+	"github.com/spf13/cobra"
+	
+	"zbz/catalog"
+	"zbz/pipz"
+	"zbz/sctx"
+)
+
+// runZeroConfigMultitenancyTests demonstrates multi-tenancy through type universes
+func runZeroConfigMultitenancyTests(cmd *cobra.Command, args []string) {
+	runTest("Tenant Universe Isolation", testTenantUniverseIsolation)
+	runTest("Per-Tenant Security Policies", testPerTenantSecurityPolicies)
+	runTest("Tenant Data Transformation", testTenantDataTransformation)
+	runTest("Cross-Tenant Safety", testCrossTenantSafety)
+	runTest("Tenant-Specific Compliance", testTenantSpecificCompliance)
+	runTest("Dynamic Tenant Onboarding", testDynamicTenantOnboarding)
+}
+
+// Tenant-specific type universes
+type TenantASecurityKey string
+type TenantBSecurityKey string
+type TenantCSecurityKey string
+
+// Enterprise tenant with special requirements
+type EnterpriseSecurityKey string
+
+const (
+	// Same keys, different meanings per tenant
+	Encrypt TenantASecurityKey = "encrypt"
+	Mask    TenantASecurityKey = "mask"
+	Audit   TenantASecurityKey = "audit"
+)
+
+// Customer data that needs tenant-specific handling
+type CustomerData struct {
+	ID        string
+	Email     string
+	CreditCard string
+	SSN       string
+	Medical   string
+}
+
+func testTenantUniverseIsolation() error {
+	// Each tenant gets their own security universe
+	tenantA := pipz.GetContract[TenantASecurityKey, CustomerData, CustomerData]()
+	tenantB := pipz.GetContract[TenantBSecurityKey, CustomerData, CustomerData]()
+	
+	// Tenant A: Basic masking
+	tenantA.Register(TenantASecurityKey("mask"), func(data CustomerData) CustomerData {
+		data.CreditCard = "****-****-****-" + data.CreditCard[len(data.CreditCard)-4:]
+		data.SSN = "***-**-" + data.SSN[len(data.SSN)-4:]
+		return data
+	})
+	
+	// Tenant B: Complete redaction
+	tenantB.Register(TenantBSecurityKey("mask"), func(data CustomerData) CustomerData {
+		data.CreditCard = "[REDACTED]"
+		data.SSN = "[REDACTED]"
+		data.Medical = "[REDACTED]"
+		return data
+	})
+	
+	// Same data, different handling per tenant
+	customer := CustomerData{
+		ID:         "CUST-123",
+		Email:      "customer@example.com",
+		CreditCard: "1234-5678-9012-3456",
+		SSN:        "123-45-6789",
+		Medical:    "Type 2 Diabetes",
+	}
+	
+	// Process through Tenant A
+	resultA, _ := tenantA.Process(TenantASecurityKey("mask"), customer)
+	if resultA.CreditCard != "****-****-****-3456" {
+		return fmt.Errorf("tenant A masking failed")
+	}
+	if resultA.Medical != "Type 2 Diabetes" { // Medical not masked for Tenant A
+		return fmt.Errorf("tenant A should not mask medical data")
+	}
+	
+	// Process through Tenant B
+	resultB, _ := tenantB.Process(TenantBSecurityKey("mask"), customer)
+	if resultB.CreditCard != "[REDACTED]" || resultB.Medical != "[REDACTED]" {
+		return fmt.Errorf("tenant B redaction failed")
+	}
+	
+	return nil
+}
+
+func testPerTenantSecurityPolicies() error {
+	// Each tenant has different security requirements
+	type SecurityPolicy struct {
+		MinPasswordLength int
+		RequireMFA       bool
+		SessionTimeout   int // minutes
+		IPWhitelist      []string
+	}
+	
+	// Get security contracts for each tenant
+	tenantAPolicies := pipz.GetContract[TenantASecurityKey, sctx.SecurityContext, SecurityPolicy]()
+	tenantBPolicies := pipz.GetContract[TenantBSecurityKey, sctx.SecurityContext, SecurityPolicy]()
+	enterprisePolicies := pipz.GetContract[EnterpriseSecurityKey, sctx.SecurityContext, SecurityPolicy]()
+	
+	// Tenant A: Basic security
+	tenantAPolicies.Register(TenantASecurityKey("policy"), func(ctx sctx.SecurityContext) SecurityPolicy {
+		return SecurityPolicy{
+			MinPasswordLength: 8,
+			RequireMFA:       false,
+			SessionTimeout:   60,
+			IPWhitelist:      []string{}, // No restrictions
+		}
+	})
+	
+	// Tenant B: Enhanced security
+	tenantBPolicies.Register(TenantBSecurityKey("policy"), func(ctx sctx.SecurityContext) SecurityPolicy {
+		return SecurityPolicy{
+			MinPasswordLength: 12,
+			RequireMFA:       true,
+			SessionTimeout:   30,
+			IPWhitelist:      []string{"10.0.0.0/8"},
+		}
+	})
+	
+	// Enterprise: Maximum security
+	enterprisePolicies.Register(EnterpriseSecurityKey("policy"), func(ctx sctx.SecurityContext) SecurityPolicy {
+		return SecurityPolicy{
+			MinPasswordLength: 16,
+			RequireMFA:       true,
+			SessionTimeout:   15,
+			IPWhitelist:      []string{"192.168.1.0/24", "10.0.1.0/24"},
+		}
+	})
+	
+	// Test policy retrieval
+	ctx := sctx.NewUserContext("test-user", []string{"read"})
+	
+	policyA, _ := tenantAPolicies.Process(TenantASecurityKey("policy"), ctx)
+	if policyA.RequireMFA != false {
+		return fmt.Errorf("tenant A should not require MFA")
+	}
+	
+	policyB, _ := tenantBPolicies.Process(TenantBSecurityKey("policy"), ctx)
+	if policyB.MinPasswordLength != 12 {
+		return fmt.Errorf("tenant B password policy incorrect")
+	}
+	
+	policyE, _ := enterprisePolicies.Process(EnterpriseSecurityKey("policy"), ctx)
+	if policyE.SessionTimeout != 15 {
+		return fmt.Errorf("enterprise session timeout incorrect")
+	}
+	
+	return nil
+}
+
+func testTenantDataTransformation() error {
+	// Different data formats per tenant
+	type InternalFormat struct {
+		FirstName string
+		LastName  string
+		Phone     string
+	}
+	
+	type TenantAFormat struct {
+		FullName string `json:"full_name"`
+		Contact  string `json:"contact"`
+	}
+	
+	type TenantBFormat struct {
+		Name struct {
+			First string `json:"first"`
+			Last  string `json:"last"`
+		} `json:"name"`
+		PhoneNumber string `json:"phone_number"`
+	}
+	
+	// Transformation contracts
+	transformA := pipz.GetContract[TenantASecurityKey, InternalFormat, TenantAFormat]()
+	transformB := pipz.GetContract[TenantBSecurityKey, InternalFormat, TenantBFormat]()
+	
+	// Tenant A wants concatenated format
+	transformA.Register(TenantASecurityKey("transform"), func(data InternalFormat) TenantAFormat {
+		return TenantAFormat{
+			FullName: data.FirstName + " " + data.LastName,
+			Contact:  data.Phone,
+		}
+	})
+	
+	// Tenant B wants nested format
+	transformB.Register(TenantBSecurityKey("transform"), func(data InternalFormat) TenantBFormat {
+		var result TenantBFormat
+		result.Name.First = data.FirstName
+		result.Name.Last = data.LastName
+		result.PhoneNumber = data.Phone
+		return result
+	})
+	
+	// Same internal data
+	internal := InternalFormat{
+		FirstName: "John",
+		LastName:  "Doe",
+		Phone:     "555-1234",
+	}
+	
+	// Different outputs per tenant
+	outputA, _ := transformA.Process(TenantASecurityKey("transform"), internal)
+	if outputA.FullName != "John Doe" {
+		return fmt.Errorf("tenant A transformation failed")
+	}
+	
+	outputB, _ := transformB.Process(TenantBSecurityKey("transform"), internal)
+	if outputB.Name.First != "John" || outputB.PhoneNumber != "555-1234" {
+		return fmt.Errorf("tenant B transformation failed")
+	}
+	
+	return nil
+}
+
+func testCrossTenantSafety() error {
+	// Verify complete isolation between tenants
+	var tenantAData string
+	var tenantBData string
+	
+	// Set up processors that would conflict if not isolated
+	contractA := pipz.GetContract[TenantASecurityKey, string, string]()
+	contractB := pipz.GetContract[TenantBSecurityKey, string, string]()
+	
+	contractA.Register(TenantASecurityKey("process"), func(data string) string {
+		tenantAData = "Tenant A: " + data
+		return tenantAData
+	})
+	
+	contractB.Register(TenantBSecurityKey("process"), func(data string) string {
+		tenantBData = "Tenant B: " + data
+		return tenantBData
+	})
+	
+	// Process same key through different tenants
+	contractA.Process(TenantASecurityKey("process"), "secret-data")
+	contractB.Process(TenantBSecurityKey("process"), "other-secret")
+	
+	// Verify no cross-contamination
+	if tenantAData != "Tenant A: secret-data" {
+		return fmt.Errorf("tenant A data corrupted")
+	}
+	if tenantBData != "Tenant B: other-secret" {
+		return fmt.Errorf("tenant B data corrupted")
+	}
+	
+	// Verify processors are truly isolated (can't access wrong tenant)
+	// This would be a compile error in real code:
+	// contractA.Process(TenantBSecurityKey("process"), "data") // Won't compile!
+	
+	return nil
+}
+
+func testTenantSpecificCompliance() error {
+	// Different compliance requirements per tenant
+	type ComplianceResult struct {
+		Compliant bool
+		Violations []string
+	}
+	
+	// Healthcare tenant needs HIPAA
+	type HealthcareTenantKey string
+	healthcareCompliance := pipz.GetContract[HealthcareTenantKey, CustomerData, ComplianceResult]()
+	
+	// Financial tenant needs PCI
+	type FinancialTenantKey string
+	financialCompliance := pipz.GetContract[FinancialTenantKey, CustomerData, ComplianceResult]()
+	
+	// Healthcare: Check for exposed medical data
+	healthcareCompliance.Register(HealthcareTenantKey("hipaa"), func(data CustomerData) ComplianceResult {
+		var violations []string
+		if data.Medical != "" && data.Medical != "[REDACTED]" {
+			violations = append(violations, "Medical data must be encrypted")
+		}
+		if data.SSN != "" && !isEncrypted(data.SSN) {
+			violations = append(violations, "SSN must be encrypted under HIPAA")
+		}
+		return ComplianceResult{
+			Compliant:  len(violations) == 0,
+			Violations: violations,
+		}
+	})
+	
+	// Financial: Check for exposed payment data
+	financialCompliance.Register(FinancialTenantKey("pci"), func(data CustomerData) ComplianceResult {
+		var violations []string
+		if len(data.CreditCard) > 4 && !isTokenized(data.CreditCard) {
+			violations = append(violations, "Credit card must be tokenized")
+		}
+		return ComplianceResult{
+			Compliant:  len(violations) == 0,
+			Violations: violations,
+		}
+	})
+	
+	// Test data
+	testData := CustomerData{
+		ID:         "TEST-123",
+		Email:      "test@example.com",
+		CreditCard: "1234-5678-9012-3456",
+		SSN:        "123-45-6789",
+		Medical:    "Prescription list",
+	}
+	
+	// Check healthcare compliance
+	healthResult, _ := healthcareCompliance.Process(HealthcareTenantKey("hipaa"), testData)
+	if healthResult.Compliant {
+		return fmt.Errorf("should have HIPAA violations")
+	}
+	if len(healthResult.Violations) != 2 {
+		return fmt.Errorf("expected 2 HIPAA violations, got %d", len(healthResult.Violations))
+	}
+	
+	// Check financial compliance
+	finResult, _ := financialCompliance.Process(FinancialTenantKey("pci"), testData)
+	if finResult.Compliant {
+		return fmt.Errorf("should have PCI violations")
+	}
+	
+	return nil
+}
+
+func testDynamicTenantOnboarding() error {
+	// Simulate runtime tenant creation
+	type DynamicTenantKey string
+	
+	var mu sync.Mutex
+	tenantConfigs := make(map[string]pipz.ServiceContract[DynamicTenantKey, CustomerData, CustomerData])
+	
+	// Function to onboard new tenant with custom rules
+	onboardTenant := func(tenantID string, maskEmail bool, maskPhone bool) {
+		mu.Lock()
+		defer mu.Unlock()
+		
+		// Each tenant gets unique type via tenantID
+		contract := pipz.GetContract[DynamicTenantKey, CustomerData, CustomerData]()
+		
+		// Register tenant-specific masking
+		contract.Register(DynamicTenantKey(tenantID+":mask"), func(data CustomerData) CustomerData {
+			if maskEmail {
+				parts := splitEmail(data.Email)
+				if len(parts) == 2 {
+					data.Email = maskString(parts[0]) + "@" + parts[1]
+				}
+			}
+			if maskPhone {
+				data.Medical = "[PRIVATE]"
+			}
+			return data
+		})
+		
+		tenantConfigs[tenantID] = *contract
+	}
+	
+	// Onboard multiple tenants with different configs
+	onboardTenant("tenant-x", true, false)  // Mask email only
+	onboardTenant("tenant-y", false, true)  // Mask medical only
+	onboardTenant("tenant-z", true, true)   // Mask both
+	
+	// Test data
+	customer := CustomerData{
+		ID:      "CUST-999",
+		Email:   "john.doe@example.com",
+		Medical: "Confidential info",
+	}
+	
+	// Process through different tenants
+	mu.Lock()
+	contractX := tenantConfigs["tenant-x"]
+	contractY := tenantConfigs["tenant-y"]
+	contractZ := tenantConfigs["tenant-z"]
+	mu.Unlock()
+	
+	resultX, _ := contractX.Process(DynamicTenantKey("tenant-x:mask"), customer)
+	if !isMasked(resultX.Email) || resultX.Medical == "[PRIVATE]" {
+		return fmt.Errorf("tenant X masking incorrect")
+	}
+	
+	resultY, _ := contractY.Process(DynamicTenantKey("tenant-y:mask"), customer)
+	if isMasked(resultY.Email) || resultY.Medical != "[PRIVATE]" {
+		return fmt.Errorf("tenant Y masking incorrect")
+	}
+	
+	resultZ, _ := contractZ.Process(DynamicTenantKey("tenant-z:mask"), customer)
+	if !isMasked(resultZ.Email) || resultZ.Medical != "[PRIVATE]" {
+		return fmt.Errorf("tenant Z masking incorrect")
+	}
+	
+	return nil
+}
+
+// Helper functions
+func isEncrypted(value string) bool {
+	return len(value) > 20 && value[:4] == "ENC:"
+}
+
+func isTokenized(value string) bool {
+	return len(value) > 10 && value[:4] == "TOK:"
+}
+
+func splitEmail(email string) []string {
+	parts := []string{"", ""}
+	for i, ch := range email {
+		if ch == '@' {
+			parts[0] = email[:i]
+			parts[1] = email[i+1:]
+			break
+		}
+	}
+	return parts
+}
+
+func maskString(s string) string {
+	if len(s) <= 2 {
+		return "**"
+	}
+	return s[0:1] + strings.Repeat("*", len(s)-2) + s[len(s)-1:]
+}
+
+func isMasked(value string) bool {
+	return strings.Contains(value, "*")
+}
