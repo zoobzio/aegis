@@ -2,6 +2,8 @@ package zlog
 
 import (
 	"time"
+
+	"aegis/cereal"
 )
 
 // ZlogField represents a typed key-value pair for structured logging
@@ -71,8 +73,9 @@ func Strings(key string, value []string) ZlogField {
 }
 
 // Data creates a field for complex data types
-// TODO: This should use zlog's own extension points, not depend on catalog
-// For now, just pass the data through
 func Data[T any](key string, value T) ZlogField {
-	return ZlogField{Key: key, Type: DataType, Value: value}
+	// Apply security transformations to a copy
+	secured := value
+	cereal.Secure(&secured)
+	return ZlogField{Key: key, Type: DataType, Value: secured}
 }

@@ -3,9 +3,7 @@ package cereal
 import (
 	"encoding/json"
 	
-	"aegis/catalog"
 	"aegis/sctx"
-	"aegis/zlog"
 )
 
 // PUBLIC API
@@ -23,27 +21,14 @@ func MarshalJSON[T any](v T, ctx sctx.SecurityContext) ([]byte, error) {
 		Extensions: make(map[string]any),
 	}
 	
+	// Apply security transformations first!
+	Secure(&input.Data)
+	
 	// Process through all registered behaviors in order
 	stages := []SerializationKey{PreProcess, Transform, Validate, Enrich, PostProcess}
 	
-	// Debug: check what's registered
-	registeredKeys := pipeline.ListKeys()
-	zlog.Debug("MarshalJSON processing",
-		zlog.String("type", catalog.GetTypeName[T]()),
-		zlog.Int("pipeline_keys", len(registeredKeys)),
-	)
-	
-	// Log all registered keys
-	for _, key := range registeredKeys {
-		zlog.Debug("Registered key", zlog.String("key", string(key)))
-	}
-	
 	for _, stage := range stages {
 		if output, exists := pipeline.Process(stage, input); exists {
-			zlog.Debug("Processing stage",
-				zlog.String("stage", string(stage)),
-				zlog.Bool("exists", exists),
-			)
 			if output.Error != nil {
 				return nil, output.Error
 			}

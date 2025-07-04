@@ -3,7 +3,6 @@ package security
 import (
 	"aegis/catalog"
 	"aegis/cereal"
-	"aegis/zlog"
 )
 
 // RegisterSerializationSecurity registers security transformations for a type
@@ -21,11 +20,6 @@ func RegisterSerializationSecurity[T any]() {
 		}
 	}
 	
-	zlog.Debug("RegisterSerializationSecurity called",
-		zlog.String("type", catalog.GetTypeName[T]()),
-		zlog.Bool("has_security_tags", hasSecurityTags),
-		zlog.Int("field_count", len(metadata.Fields)),
-	)
 	
 	if !hasSecurityTags {
 		return // No security tags, nothing to do
@@ -37,10 +31,6 @@ func RegisterSerializationSecurity[T any]() {
 	// Register our security transformer
 	pipeline.Register(cereal.Transform, createSerializationSecurityProcessor[T]())
 	
-	zlog.Debug("Security processor registered",
-		zlog.String("type", catalog.GetTypeName[T]()),
-		zlog.String("stage", string(cereal.Transform)),
-	)
 }
 
 // createSerializationSecurityProcessor creates a processor for cereal's pipeline
@@ -54,11 +44,6 @@ func createSerializationSecurityProcessor[T any]() func(cereal.SerializationInpu
 		result := input.Data
 		redactedFields := []string{}
 		
-		// Debug logging
-		zlog.Debug("Security processor executing",
-			zlog.String("type", catalog.GetTypeName[T]()),
-			zlog.Int("field_count", len(metadata.Fields)),
-		)
 		
 		// Process each field based on its tags
 		for _, field := range metadata.Fields {
@@ -73,11 +58,6 @@ func createSerializationSecurityProcessor[T any]() func(cereal.SerializationInpu
 			
 			// Check scope-based access control first
 			if scope != "" && !input.Context.HasPermission(scope) {
-				zlog.Debug("No permission for field",
-					zlog.String("field", field.Name),
-					zlog.String("scope", scope),
-					zlog.Strings("user_permissions", input.Context.Permissions),
-				)
 				
 				// No permission - redact the field entirely
 				manipulator.Redact(&result)

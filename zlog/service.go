@@ -104,7 +104,7 @@ func putBuffer(buf *bytes.Buffer) {
 	bufferPool.Put(buf)
 }
 
-// writeConsole writes directly to stdout with zero allocation
+// writeConsole writes directly to stdout
 func writeConsole(level, msg string, fields []ZlogField) {
 	buf := getBuffer()
 	defer putBuffer(buf)

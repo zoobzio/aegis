@@ -41,7 +41,8 @@ func Select[T any]() ModelMetadata {
 	metadataCache[typeName] = metadata
 	cacheMutex.Unlock()
 	
-	// Metadata cached successfully
+	// Check type conventions (e.g., security registration)
+	checkTypeConventions[T](metadata)
 	
 	return metadata
 }
@@ -92,7 +93,7 @@ func GetTypeName[T any]() string {
 
 // RegisterTransformer stores a transformer for type T
 // This enables type-specific behavior storage (not just metadata)
-func RegisterTransformer[T any](transformer any) {
+func RegisterTransformer[T any](transformer StructTransformer[T]) {
 	typeName := GetTypeName[T]()
 	
 	transformerMutex.Lock()
@@ -270,3 +271,18 @@ func GetConvention[T any, R any](name string) (func(T) R, bool) {
 // ensureMetadata is now incorporated directly into Select[T]()
 // getByTypeName is removed - only Select[T]() should be used
 // All other convenience functions removed - users extract from Select[T]()
+
+// TypeIngestedEvent represents a type being ingested into the catalog
+// This is a generic event that preserves the type information
+type TypeIngestedEvent[T any] struct {
+	TypeName string
+	Metadata ModelMetadata
+	ZeroValue T // Preserves the generic type
+}
+
+// TypeIngestedEventType is the event type for type ingestion
+type TypeIngestedEventType string
+
+const (
+	TypeIngested TypeIngestedEventType = "catalog.type_ingested"
+)

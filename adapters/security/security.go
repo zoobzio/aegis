@@ -37,6 +37,9 @@ func Initialize() {
 	
 	// Register security behaviors for common patterns
 	RegisterSecurityBehaviors()
+	
+	// Register type convention checker
+	RegisterSecurityConvention()
 }
 
 // InitializeWithKey sets up the security adapter with encryption
@@ -134,6 +137,72 @@ func RegisterSecurityTags() {
 	catalog.RegisterTag("scope")      // Field-level access control: scope:"admin"
 	catalog.RegisterTag("validate")   // Field validation rules: validate:"ssn"
 	catalog.RegisterTag("security")   // Security behaviors: security:"encrypt,pii"
+}
+
+// RegisterTransformer creates and registers a generic security transformer for any type T.
+// This is called by types implementing SecurityConvention in their RegisterSecurity method.
+func RegisterTransformer[T any]() {
+	transformer := func(source T, dest *T) error {
+		*dest = source
+		
+		// Get metadata and manipulators
+		metadata := catalog.Select[T]()
+		manipulators := catalog.GetFieldManipulators[T]()
+		
+		for _, field := range metadata.Fields {
+			manipulator, exists := manipulators[field.Name]
+			if !exists {
+				continue
+			}
+			
+			// Check validate tag for masking functions
+			if validateTag := field.Tags["validate"]; validateTag != "" {
+				if maskFunc, hasMask := catalog.GetMaskFunction(validateTag); hasMask {
+					if val, err := manipulator.GetString(source); err == nil {
+						masked := maskFunc(val)
+						manipulator.SetString(dest, masked)
+					}
+				}
+			}
+			
+			// Check for PII/security tags that need generic masking
+			if field.Tags["security"] == "pii" || field.Tags["encrypt"] != "" {
+				manipulator.Redact(dest)
+			}
+		}
+		
+		return nil
+	}
+	
+	// Register the transformer
+	catalog.RegisterTransformer[T](transformer)
+}
+
+// RegisterSecurityConvention registers the type convention checker with catalog
+func RegisterSecurityConvention() {
+	catalog.RegisterTypeConvention(func(metadata catalog.ModelMetadata) *catalog.TypeConventionCheck {
+		// Check if type needs security
+		needsSecurity := false
+		for _, field := range metadata.Fields {
+			if field.Tags["security"] != "" || field.Tags["validate"] != "" || field.Tags["encrypt"] != "" {
+				needsSecurity = true
+				break
+			}
+		}
+		
+		if !needsSecurity {
+			return nil // No security needed for this type
+		}
+		
+		return &catalog.TypeConventionCheck{
+			Name: "Setup",
+			IsRequired: func(m catalog.ModelMetadata) bool {
+				return true // Already checked above
+			},
+			InterfacePtr:   (*catalog.SetupConvention)(nil),
+			FailureMessage: "has security tags but does not implement Setup() method. Use: func (YourType) Setup() { security.RegisterTransformer[YourType]() }",
+		}
+	})
 }
 
 // Re-export convenient security logging functions

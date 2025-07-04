@@ -24,6 +24,7 @@ func emitEvent(typeName string, eventData []byte) {
 	}
 }
 
+
 // PipzEventHandler handles pipz events for catalog
 type PipzEventHandler interface {
 	OnProcessorRegistered(contractSignature, keyTypeName, keyValue string)

@@ -8,8 +8,8 @@ import (
 type zlogEventSink struct{}
 
 func (s *zlogEventSink) EmitLogEvent(event zlog.LogEvent) {
-	// Emit the strongly typed event - type system IS the distribution architecture!
-	Emit[zlog.LogEventType, zlog.LogEvent](event)
+	// Broadcast synchronously - logs need to go to multiple places!
+	BroadcastSync[zlog.LogEventType, zlog.LogEvent](event)
 }
 
 // CreateZlogEventSink creates an EventSink for zlog (used by core orchestration)
