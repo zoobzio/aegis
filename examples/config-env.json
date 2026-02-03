@@ -1,0 +1,32 @@
+{
+  "node": {
+    "id": "processor-1",
+    "name": "Data Processor",
+    "type": "processor",
+    "address": "10.0.2.20:8002"
+  },
+  "tls": {
+    "source": "env",
+    "cert_env": "AEGIS_TLS_CERT",
+    "key_env": "AEGIS_TLS_KEY",
+    "ca_env": "AEGIS_TLS_CA",
+    "verify_chain": true,
+    "allow_expired": false,
+    "require_client_cert": true,
+    "verify_client_cert": true
+  },
+  "network": {
+    "dial_timeout": "10s",
+    "request_timeout": "30s",
+    "max_retries": 3,
+    "retry_backoff": "1s",
+    "max_connections": 100,
+    "idle_timeout": "5m"
+  },
+  "health": {
+    "check_interval": "30s",
+    "timeout": "5s",
+    "unhealthy_threshold": 3,
+    "healthy_threshold": 2
+  }
+}

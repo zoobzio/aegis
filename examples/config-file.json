@@ -1,0 +1,33 @@
+{
+  "node": {
+    "id": "gateway-1",
+    "name": "Primary Gateway",
+    "type": "gateway",
+    "address": "10.0.1.10:8001"
+  },
+  "tls": {
+    "source": "file",
+    "cert_file": "/etc/aegis/certs/gateway-1-cert.pem",
+    "key_file": "/etc/aegis/certs/gateway-1-key.pem",
+    "ca_file": "/etc/aegis/certs/ca-cert.pem",
+    "verify_chain": true,
+    "allow_expired": false,
+    "require_client_cert": true,
+    "verify_client_cert": true,
+    "required_sans": ["gateway-1", "*.aegis.local"]
+  },
+  "network": {
+    "dial_timeout": "10s",
+    "request_timeout": "30s",
+    "max_retries": 3,
+    "retry_backoff": "1s",
+    "max_connections": 100,
+    "idle_timeout": "5m"
+  },
+  "health": {
+    "check_interval": "30s",
+    "timeout": "5s",
+    "unhealthy_threshold": 3,
+    "healthy_threshold": 2
+  }
+}
