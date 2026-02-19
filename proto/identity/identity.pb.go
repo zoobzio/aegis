@@ -454,6 +454,353 @@ func (x *Provider) GetLinkedAt() int64 {
 	return 0
 }
 
+// RevokeSessionRequest identifies the session to revoke.
+type RevokeSessionRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Token         string                 `protobuf:"bytes,1,opt,name=token,proto3" json:"token,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RevokeSessionRequest) Reset() {
+	*x = RevokeSessionRequest{}
+	mi := &file_proto_identity_identity_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RevokeSessionRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RevokeSessionRequest) ProtoMessage() {}
+
+func (x *RevokeSessionRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_identity_identity_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RevokeSessionRequest.ProtoReflect.Descriptor instead.
+func (*RevokeSessionRequest) Descriptor() ([]byte, []int) {
+	return file_proto_identity_identity_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *RevokeSessionRequest) GetToken() string {
+	if x != nil {
+		return x.Token
+	}
+	return ""
+}
+
+// RevokeSessionResponse indicates revocation success.
+type RevokeSessionResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RevokeSessionResponse) Reset() {
+	*x = RevokeSessionResponse{}
+	mi := &file_proto_identity_identity_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RevokeSessionResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RevokeSessionResponse) ProtoMessage() {}
+
+func (x *RevokeSessionResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_identity_identity_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RevokeSessionResponse.ProtoReflect.Descriptor instead.
+func (*RevokeSessionResponse) Descriptor() ([]byte, []int) {
+	return file_proto_identity_identity_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *RevokeSessionResponse) GetSuccess() bool {
+	if x != nil {
+		return x.Success
+	}
+	return false
+}
+
+// RevokeUserSessionsRequest identifies the user whose sessions to revoke.
+type RevokeUserSessionsRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RevokeUserSessionsRequest) Reset() {
+	*x = RevokeUserSessionsRequest{}
+	mi := &file_proto_identity_identity_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RevokeUserSessionsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RevokeUserSessionsRequest) ProtoMessage() {}
+
+func (x *RevokeUserSessionsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_identity_identity_proto_msgTypes[10]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RevokeUserSessionsRequest.ProtoReflect.Descriptor instead.
+func (*RevokeUserSessionsRequest) Descriptor() ([]byte, []int) {
+	return file_proto_identity_identity_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *RevokeUserSessionsRequest) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
+// RevokeUserSessionsResponse contains the count of revoked sessions.
+type RevokeUserSessionsResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	RevokedCount  int32                  `protobuf:"varint,1,opt,name=revoked_count,json=revokedCount,proto3" json:"revoked_count,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RevokeUserSessionsResponse) Reset() {
+	*x = RevokeUserSessionsResponse{}
+	mi := &file_proto_identity_identity_proto_msgTypes[11]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RevokeUserSessionsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RevokeUserSessionsResponse) ProtoMessage() {}
+
+func (x *RevokeUserSessionsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_identity_identity_proto_msgTypes[11]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RevokeUserSessionsResponse.ProtoReflect.Descriptor instead.
+func (*RevokeUserSessionsResponse) Descriptor() ([]byte, []int) {
+	return file_proto_identity_identity_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *RevokeUserSessionsResponse) GetRevokedCount() int32 {
+	if x != nil {
+		return x.RevokedCount
+	}
+	return 0
+}
+
+// ListUserSessionsRequest identifies the user whose sessions to list.
+type ListUserSessionsRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListUserSessionsRequest) Reset() {
+	*x = ListUserSessionsRequest{}
+	mi := &file_proto_identity_identity_proto_msgTypes[12]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListUserSessionsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListUserSessionsRequest) ProtoMessage() {}
+
+func (x *ListUserSessionsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_identity_identity_proto_msgTypes[12]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListUserSessionsRequest.ProtoReflect.Descriptor instead.
+func (*ListUserSessionsRequest) Descriptor() ([]byte, []int) {
+	return file_proto_identity_identity_proto_rawDescGZIP(), []int{12}
+}
+
+func (x *ListUserSessionsRequest) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
+// ListUserSessionsResponse contains the user's active sessions.
+type ListUserSessionsResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Sessions      []*SessionInfo         `protobuf:"bytes,1,rep,name=sessions,proto3" json:"sessions,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListUserSessionsResponse) Reset() {
+	*x = ListUserSessionsResponse{}
+	mi := &file_proto_identity_identity_proto_msgTypes[13]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListUserSessionsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListUserSessionsResponse) ProtoMessage() {}
+
+func (x *ListUserSessionsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_identity_identity_proto_msgTypes[13]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListUserSessionsResponse.ProtoReflect.Descriptor instead.
+func (*ListUserSessionsResponse) Descriptor() ([]byte, []int) {
+	return file_proto_identity_identity_proto_rawDescGZIP(), []int{13}
+}
+
+func (x *ListUserSessionsResponse) GetSessions() []*SessionInfo {
+	if x != nil {
+		return x.Sessions
+	}
+	return nil
+}
+
+// SessionInfo contains information about an active session.
+type SessionInfo struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	TokenPrefix   string                 `protobuf:"bytes,1,opt,name=token_prefix,json=tokenPrefix,proto3" json:"token_prefix,omitempty"` // First N chars for identification, not full token
+	CreatedAt     int64                  `protobuf:"varint,2,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`      // Unix timestamp
+	ExpiresAt     int64                  `protobuf:"varint,3,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`      // Unix timestamp
+	UserAgent     string                 `protobuf:"bytes,4,opt,name=user_agent,json=userAgent,proto3" json:"user_agent,omitempty"`       // Device/browser info
+	IpAddress     string                 `protobuf:"bytes,5,opt,name=ip_address,json=ipAddress,proto3" json:"ip_address,omitempty"`       // Last known IP
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SessionInfo) Reset() {
+	*x = SessionInfo{}
+	mi := &file_proto_identity_identity_proto_msgTypes[14]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SessionInfo) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SessionInfo) ProtoMessage() {}
+
+func (x *SessionInfo) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_identity_identity_proto_msgTypes[14]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SessionInfo.ProtoReflect.Descriptor instead.
+func (*SessionInfo) Descriptor() ([]byte, []int) {
+	return file_proto_identity_identity_proto_rawDescGZIP(), []int{14}
+}
+
+func (x *SessionInfo) GetTokenPrefix() string {
+	if x != nil {
+		return x.TokenPrefix
+	}
+	return ""
+}
+
+func (x *SessionInfo) GetCreatedAt() int64 {
+	if x != nil {
+		return x.CreatedAt
+	}
+	return 0
+}
+
+func (x *SessionInfo) GetExpiresAt() int64 {
+	if x != nil {
+		return x.ExpiresAt
+	}
+	return 0
+}
+
+func (x *SessionInfo) GetUserAgent() string {
+	if x != nil {
+		return x.UserAgent
+	}
+	return ""
+}
+
+func (x *SessionInfo) GetIpAddress() string {
+	if x != nil {
+		return x.IpAddress
+	}
+	return ""
+}
+
 var File_proto_identity_identity_proto protoreflect.FileDescriptor
 
 const file_proto_identity_identity_proto_rawDesc = "" +
@@ -486,12 +833,37 @@ const file_proto_identity_identity_proto_rawDesc = "" +
 	"\bProvider\x12\x12\n" +
 	"\x04type\x18\x01 \x01(\tR\x04type\x12(\n" +
 	"\x10provider_user_id\x18\x02 \x01(\tR\x0eproviderUserId\x12\x1b\n" +
-	"\tlinked_at\x18\x03 \x01(\x03R\blinkedAt2\x91\x03\n" +
+	"\tlinked_at\x18\x03 \x01(\x03R\blinkedAt\",\n" +
+	"\x14RevokeSessionRequest\x12\x14\n" +
+	"\x05token\x18\x01 \x01(\tR\x05token\"1\n" +
+	"\x15RevokeSessionResponse\x12\x18\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess\"4\n" +
+	"\x19RevokeUserSessionsRequest\x12\x17\n" +
+	"\auser_id\x18\x01 \x01(\tR\x06userId\"A\n" +
+	"\x1aRevokeUserSessionsResponse\x12#\n" +
+	"\rrevoked_count\x18\x01 \x01(\x05R\frevokedCount\"2\n" +
+	"\x17ListUserSessionsRequest\x12\x17\n" +
+	"\auser_id\x18\x01 \x01(\tR\x06userId\"V\n" +
+	"\x18ListUserSessionsResponse\x12:\n" +
+	"\bsessions\x18\x01 \x03(\v2\x1e.aegis.identity.v1.SessionInfoR\bsessions\"\xac\x01\n" +
+	"\vSessionInfo\x12!\n" +
+	"\ftoken_prefix\x18\x01 \x01(\tR\vtokenPrefix\x12\x1d\n" +
+	"\n" +
+	"created_at\x18\x02 \x01(\x03R\tcreatedAt\x12\x1d\n" +
+	"\n" +
+	"expires_at\x18\x03 \x01(\x03R\texpiresAt\x12\x1d\n" +
+	"\n" +
+	"user_agent\x18\x04 \x01(\tR\tuserAgent\x12\x1d\n" +
+	"\n" +
+	"ip_address\x18\x05 \x01(\tR\tipAddress2\xd5\x05\n" +
 	"\x0fIdentityService\x12h\n" +
 	"\x0fValidateSession\x12).aegis.identity.v1.ValidateSessionRequest\x1a*.aegis.identity.v1.ValidateSessionResponse\x12P\n" +
 	"\aGetUser\x12!.aegis.identity.v1.GetUserRequest\x1a\".aegis.identity.v1.GetUserResponse\x12^\n" +
 	"\x0eGetUserByEmail\x12(.aegis.identity.v1.GetUserByEmailRequest\x1a\".aegis.identity.v1.GetUserResponse\x12b\n" +
-	"\rListProviders\x12'.aegis.identity.v1.ListProvidersRequest\x1a(.aegis.identity.v1.ListProvidersResponseB)Z'github.com/zoobzio/aegis/proto/identityb\x06proto3"
+	"\rListProviders\x12'.aegis.identity.v1.ListProvidersRequest\x1a(.aegis.identity.v1.ListProvidersResponse\x12b\n" +
+	"\rRevokeSession\x12'.aegis.identity.v1.RevokeSessionRequest\x1a(.aegis.identity.v1.RevokeSessionResponse\x12q\n" +
+	"\x12RevokeUserSessions\x12,.aegis.identity.v1.RevokeUserSessionsRequest\x1a-.aegis.identity.v1.RevokeUserSessionsResponse\x12k\n" +
+	"\x10ListUserSessions\x12*.aegis.identity.v1.ListUserSessionsRequest\x1a+.aegis.identity.v1.ListUserSessionsResponseB)Z'github.com/zoobzio/aegis/proto/identityb\x06proto3"
 
 var (
 	file_proto_identity_identity_proto_rawDescOnce sync.Once
@@ -505,32 +877,46 @@ func file_proto_identity_identity_proto_rawDescGZIP() []byte {
 	return file_proto_identity_identity_proto_rawDescData
 }
 
-var file_proto_identity_identity_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
+var file_proto_identity_identity_proto_msgTypes = make([]protoimpl.MessageInfo, 15)
 var file_proto_identity_identity_proto_goTypes = []any{
-	(*ValidateSessionRequest)(nil),  // 0: aegis.identity.v1.ValidateSessionRequest
-	(*ValidateSessionResponse)(nil), // 1: aegis.identity.v1.ValidateSessionResponse
-	(*GetUserRequest)(nil),          // 2: aegis.identity.v1.GetUserRequest
-	(*GetUserByEmailRequest)(nil),   // 3: aegis.identity.v1.GetUserByEmailRequest
-	(*GetUserResponse)(nil),         // 4: aegis.identity.v1.GetUserResponse
-	(*ListProvidersRequest)(nil),    // 5: aegis.identity.v1.ListProvidersRequest
-	(*ListProvidersResponse)(nil),   // 6: aegis.identity.v1.ListProvidersResponse
-	(*Provider)(nil),                // 7: aegis.identity.v1.Provider
+	(*ValidateSessionRequest)(nil),     // 0: aegis.identity.v1.ValidateSessionRequest
+	(*ValidateSessionResponse)(nil),    // 1: aegis.identity.v1.ValidateSessionResponse
+	(*GetUserRequest)(nil),             // 2: aegis.identity.v1.GetUserRequest
+	(*GetUserByEmailRequest)(nil),      // 3: aegis.identity.v1.GetUserByEmailRequest
+	(*GetUserResponse)(nil),            // 4: aegis.identity.v1.GetUserResponse
+	(*ListProvidersRequest)(nil),       // 5: aegis.identity.v1.ListProvidersRequest
+	(*ListProvidersResponse)(nil),      // 6: aegis.identity.v1.ListProvidersResponse
+	(*Provider)(nil),                   // 7: aegis.identity.v1.Provider
+	(*RevokeSessionRequest)(nil),       // 8: aegis.identity.v1.RevokeSessionRequest
+	(*RevokeSessionResponse)(nil),      // 9: aegis.identity.v1.RevokeSessionResponse
+	(*RevokeUserSessionsRequest)(nil),  // 10: aegis.identity.v1.RevokeUserSessionsRequest
+	(*RevokeUserSessionsResponse)(nil), // 11: aegis.identity.v1.RevokeUserSessionsResponse
+	(*ListUserSessionsRequest)(nil),    // 12: aegis.identity.v1.ListUserSessionsRequest
+	(*ListUserSessionsResponse)(nil),   // 13: aegis.identity.v1.ListUserSessionsResponse
+	(*SessionInfo)(nil),                // 14: aegis.identity.v1.SessionInfo
 }
 var file_proto_identity_identity_proto_depIdxs = []int32{
-	7, // 0: aegis.identity.v1.ListProvidersResponse.providers:type_name -> aegis.identity.v1.Provider
-	0, // 1: aegis.identity.v1.IdentityService.ValidateSession:input_type -> aegis.identity.v1.ValidateSessionRequest
-	2, // 2: aegis.identity.v1.IdentityService.GetUser:input_type -> aegis.identity.v1.GetUserRequest
-	3, // 3: aegis.identity.v1.IdentityService.GetUserByEmail:input_type -> aegis.identity.v1.GetUserByEmailRequest
-	5, // 4: aegis.identity.v1.IdentityService.ListProviders:input_type -> aegis.identity.v1.ListProvidersRequest
-	1, // 5: aegis.identity.v1.IdentityService.ValidateSession:output_type -> aegis.identity.v1.ValidateSessionResponse
-	4, // 6: aegis.identity.v1.IdentityService.GetUser:output_type -> aegis.identity.v1.GetUserResponse
-	4, // 7: aegis.identity.v1.IdentityService.GetUserByEmail:output_type -> aegis.identity.v1.GetUserResponse
-	6, // 8: aegis.identity.v1.IdentityService.ListProviders:output_type -> aegis.identity.v1.ListProvidersResponse
-	5, // [5:9] is the sub-list for method output_type
-	1, // [1:5] is the sub-list for method input_type
-	1, // [1:1] is the sub-list for extension type_name
-	1, // [1:1] is the sub-list for extension extendee
-	0, // [0:1] is the sub-list for field type_name
+	7,  // 0: aegis.identity.v1.ListProvidersResponse.providers:type_name -> aegis.identity.v1.Provider
+	14, // 1: aegis.identity.v1.ListUserSessionsResponse.sessions:type_name -> aegis.identity.v1.SessionInfo
+	0,  // 2: aegis.identity.v1.IdentityService.ValidateSession:input_type -> aegis.identity.v1.ValidateSessionRequest
+	2,  // 3: aegis.identity.v1.IdentityService.GetUser:input_type -> aegis.identity.v1.GetUserRequest
+	3,  // 4: aegis.identity.v1.IdentityService.GetUserByEmail:input_type -> aegis.identity.v1.GetUserByEmailRequest
+	5,  // 5: aegis.identity.v1.IdentityService.ListProviders:input_type -> aegis.identity.v1.ListProvidersRequest
+	8,  // 6: aegis.identity.v1.IdentityService.RevokeSession:input_type -> aegis.identity.v1.RevokeSessionRequest
+	10, // 7: aegis.identity.v1.IdentityService.RevokeUserSessions:input_type -> aegis.identity.v1.RevokeUserSessionsRequest
+	12, // 8: aegis.identity.v1.IdentityService.ListUserSessions:input_type -> aegis.identity.v1.ListUserSessionsRequest
+	1,  // 9: aegis.identity.v1.IdentityService.ValidateSession:output_type -> aegis.identity.v1.ValidateSessionResponse
+	4,  // 10: aegis.identity.v1.IdentityService.GetUser:output_type -> aegis.identity.v1.GetUserResponse
+	4,  // 11: aegis.identity.v1.IdentityService.GetUserByEmail:output_type -> aegis.identity.v1.GetUserResponse
+	6,  // 12: aegis.identity.v1.IdentityService.ListProviders:output_type -> aegis.identity.v1.ListProvidersResponse
+	9,  // 13: aegis.identity.v1.IdentityService.RevokeSession:output_type -> aegis.identity.v1.RevokeSessionResponse
+	11, // 14: aegis.identity.v1.IdentityService.RevokeUserSessions:output_type -> aegis.identity.v1.RevokeUserSessionsResponse
+	13, // 15: aegis.identity.v1.IdentityService.ListUserSessions:output_type -> aegis.identity.v1.ListUserSessionsResponse
+	9,  // [9:16] is the sub-list for method output_type
+	2,  // [2:9] is the sub-list for method input_type
+	2,  // [2:2] is the sub-list for extension type_name
+	2,  // [2:2] is the sub-list for extension extendee
+	0,  // [0:2] is the sub-list for field type_name
 }
 
 func init() { file_proto_identity_identity_proto_init() }
@@ -544,7 +930,7 @@ func file_proto_identity_identity_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_proto_identity_identity_proto_rawDesc), len(file_proto_identity_identity_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   8,
+			NumMessages:   15,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
