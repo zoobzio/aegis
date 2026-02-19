@@ -1,0 +1,58 @@
+version: "2"
+
+run:
+  timeout: 5m
+  tests: true
+  build-tags:
+    - integration
+
+linters:
+  enable:
+    # Security
+    - gosec
+    - errorlint
+    - noctx
+    - bodyclose
+    - sqlclosecheck
+    # Quality
+    - govet
+    - ineffassign
+    - staticcheck
+    - unused
+    - errcheck
+    - errchkjson
+    - wastedassign
+    # Best practices
+    - unconvert
+    - dupl
+    - goconst
+    - misspell
+    - prealloc
+    - copyloopvar
+
+  exclusions:
+    rules:
+      - path: _test\.go
+        linters:
+          - funlen
+          - goconst
+          - dupl
+          - govet
+          - revive
+      # gRPC handlers have fixed signatures
+      - path: server\.go
+        text: "unused-parameter"
+      # File operations are expected in TLS/config loading
+      - path: (config|tls|tls_config)\.go
+        text: "G304"
+
+settings:
+  errcheck:
+    check-type-assertions: true
+  govet:
+    enable-all: true
+  dupl:
+    threshold: 150
+  goconst:
+    min-len: 3
+    min-occurrences: 3

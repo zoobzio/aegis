@@ -5,23 +5,12 @@ package aegis;
 option go_package = "github.com/zoobzio/aegis";
 
 service MeshService {
+  // Core mesh primitives
   rpc Ping(PingRequest) returns (PingResponse);
   rpc GetHealth(HealthRequest) returns (HealthResponse);
   rpc GetNodeInfo(NodeInfoRequest) returns (NodeInfoResponse);
-  rpc NotifyHealthChange(HealthChangeRequest) returns (HealthChangeResponse);
-  rpc ExecuteFunction(FunctionRequest) returns (FunctionResponse);
-  rpc SendMessage(MessageRequest) returns (MessageResponse);
-  
-  // Room operations
-  rpc CreateRoom(CreateRoomRequest) returns (CreateRoomResponse);
-  rpc InviteToRoom(RoomInviteRequest) returns (RoomInviteResponse);
-  rpc JoinRoom(JoinRoomRequest) returns (JoinRoomResponse);
-  rpc LeaveRoom(LeaveRoomRequest) returns (LeaveRoomResponse);
-  rpc SendRoomMessage(RoomMessageRequest) returns (RoomMessageResponse);
-  
+
   // Topology operations
-  rpc RequestJoinMesh(JoinMeshRequest) returns (JoinMeshResponse);
-  rpc VoteOnNode(NodeVoteRequest) returns (NodeVoteResponse);
   rpc SyncTopology(TopologySyncRequest) returns (TopologySyncResponse);
   rpc GetTopology(GetTopologyRequest) returns (GetTopologyResponse);
 }
@@ -61,132 +50,7 @@ message NodeInfoResponse {
   HealthResponse health = 5;
 }
 
-message HealthChangeRequest {
-  string sender_id = 1;
-  string failed_node_id = 2;
-  string status = 3;
-  string message = 4;
-  int64 timestamp = 5;
-}
-
-message HealthChangeResponse {
-  bool acknowledged = 1;
-  string receiver_id = 2;
-}
-
-message FunctionRequest {
-  string sender_id = 1;
-  string function_name = 2;
-  repeated string parameters = 3;
-  int64 timestamp = 4;
-}
-
-message FunctionResponse {
-  string receiver_id = 1;
-  bool success = 2;
-  string result = 3;
-  string error = 4;
-  int64 timestamp = 5;
-}
-
-message MessageRequest {
-  string sender_id = 1;
-  string message = 2;
-  int64 timestamp = 3;
-}
-
-message MessageResponse {
-  string receiver_id = 1;
-  bool received = 2;
-  int64 timestamp = 3;
-}
-
-// Room messages
-message CreateRoomRequest {
-  string sender_id = 1;
-  string room_id = 2;
-  string room_name = 3;
-}
-
-message CreateRoomResponse {
-  bool success = 1;
-  string room_id = 2;
-  string error = 3;
-}
-
-message RoomInviteRequest {
-  string sender_id = 1;
-  string room_id = 2;
-  string invitee_id = 3;
-}
-
-message RoomInviteResponse {
-  string receiver_id = 1;
-  bool acknowledged = 2;
-}
-
-message JoinRoomRequest {
-  string sender_id = 1;
-  string room_id = 2;
-  string host_id = 3;
-}
-
-message JoinRoomResponse {
-  bool success = 1;
-  string error = 2;
-  repeated string members = 3;
-}
-
-message LeaveRoomRequest {
-  string sender_id = 1;
-  string room_id = 2;
-}
-
-message LeaveRoomResponse {
-  bool success = 1;
-  string error = 2;
-}
-
-message RoomMessageRequest {
-  string sender_id = 1;
-  string room_id = 2;
-  string message = 3;
-  int64 timestamp = 4;
-}
-
-message RoomMessageResponse {
-  bool acknowledged = 1;
-  string error = 2;
-}
-
 // Topology messages
-message JoinMeshRequest {
-  string node_id = 1;
-  string name = 2;
-  string type = 3;
-  string address = 4;
-  string request_id = 5;
-}
-
-message JoinMeshResponse {
-  bool pending = 1;
-  string request_id = 2;
-  string message = 3;
-}
-
-message NodeVoteRequest {
-  string voter_id = 1;
-  string request_id = 2;
-  string candidate_id = 3;
-  bool approve = 4;
-  string reason = 5;
-}
-
-message NodeVoteResponse {
-  bool acknowledged = 1;
-  string error = 2;
-}
-
 message TopologySyncRequest {
   string sender_id = 1;
   int64 version = 2;
@@ -194,7 +58,7 @@ message TopologySyncRequest {
 
 message TopologySyncResponse {
   int64 version = 1;
-  repeated NodeInfoProto nodes = 2;
+  repeated TopologyNode nodes = 2;
   int64 updated_at = 3;
 }
 
@@ -204,14 +68,20 @@ message GetTopologyRequest {
 
 message GetTopologyResponse {
   int64 version = 1;
-  repeated NodeInfoProto nodes = 2;
+  repeated TopologyNode nodes = 2;
 }
 
-message NodeInfoProto {
+message TopologyNode {
   string id = 1;
   string name = 2;
   string type = 3;
   string address = 4;
   int64 joined_at = 5;
   int64 updated_at = 6;
+  repeated Service services = 7;
+}
+
+message Service {
+  string name = 1;
+  string version = 2;
 }

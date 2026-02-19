@@ -10,18 +10,21 @@ import (
 	"google.golang.org/grpc/credentials"
 )
 
+// PeerInfo contains information about a peer node.
 type PeerInfo struct {
 	ID      string   `json:"id"`
 	Address string   `json:"address"`
 	Type    NodeType `json:"type"`
 }
 
+// Peer represents a connected peer node.
 type Peer struct {
 	Info   PeerInfo
 	Client MeshServiceClient
 	Conn   *grpc.ClientConn
 }
 
+// PeerManager manages connections to peer nodes.
 type PeerManager struct {
 	nodeID    string
 	peers     map[string]*Peer
@@ -29,6 +32,7 @@ type PeerManager struct {
 	mu        sync.RWMutex
 }
 
+// NewPeerManager creates a new peer manager.
 func NewPeerManager(nodeID string) *PeerManager {
 	return &PeerManager{
 		nodeID: nodeID,
@@ -36,12 +40,14 @@ func NewPeerManager(nodeID string) *PeerManager {
 	}
 }
 
+// SetTLSConfig sets the TLS configuration for peer connections.
 func (pm *PeerManager) SetTLSConfig(tlsConfig *TLSConfig) {
 	pm.mu.Lock()
 	defer pm.mu.Unlock()
 	pm.tlsConfig = tlsConfig
 }
 
+// AddPeer adds a new peer connection.
 func (pm *PeerManager) AddPeer(info PeerInfo) error {
 	pm.mu.Lock()
 	defer pm.mu.Unlock()
@@ -50,22 +56,12 @@ func (pm *PeerManager) AddPeer(info PeerInfo) error {
 		return fmt.Errorf("peer %s already exists", info.ID)
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	// TLS is required
 	if pm.tlsConfig == nil {
 		return fmt.Errorf("TLS configuration is required but not set")
 	}
-	
-	// Configure dial options with TLS
-	creds := credentials.NewTLS(pm.tlsConfig.GetClientTLSConfig(info.ID))
-	opts := []grpc.DialOption{
-		grpc.WithTransportCredentials(creds),
-		grpc.WithBlock(),
-	}
 
-	conn, err := grpc.DialContext(ctx, info.Address, opts...)
+	creds := credentials.NewTLS(pm.tlsConfig.GetClientTLSConfig(info.ID))
+	conn, err := grpc.NewClient(info.Address, grpc.WithTransportCredentials(creds))
 	if err != nil {
 		return fmt.Errorf("failed to connect to peer %s at %s: %w", info.ID, info.Address, err)
 	}
@@ -82,6 +78,7 @@ func (pm *PeerManager) AddPeer(info PeerInfo) error {
 	return nil
 }
 
+// RemovePeer removes a peer connection.
 func (pm *PeerManager) RemovePeer(peerID string) error {
 	pm.mu.Lock()
 	defer pm.mu.Unlock()
@@ -99,6 +96,7 @@ func (pm *PeerManager) RemovePeer(peerID string) error {
 	return nil
 }
 
+// GetPeer returns a peer by ID.
 func (pm *PeerManager) GetPeer(peerID string) (*Peer, bool) {
 	pm.mu.RLock()
 	defer pm.mu.RUnlock()
@@ -107,6 +105,7 @@ func (pm *PeerManager) GetPeer(peerID string) (*Peer, bool) {
 	return peer, exists
 }
 
+// GetAllPeers returns all connected peers.
 func (pm *PeerManager) GetAllPeers() []*Peer {
 	pm.mu.RLock()
 	defer pm.mu.RUnlock()
@@ -118,6 +117,7 @@ func (pm *PeerManager) GetAllPeers() []*Peer {
 	return peers
 }
 
+// GetPeersByType returns peers of a specific type.
 func (pm *PeerManager) GetPeersByType(nodeType NodeType) []*Peer {
 	pm.mu.RLock()
 	defer pm.mu.RUnlock()
@@ -131,6 +131,7 @@ func (pm *PeerManager) GetPeersByType(nodeType NodeType) []*Peer {
 	return peers
 }
 
+// PingPeer sends a ping request to a peer.
 func (pm *PeerManager) PingPeer(ctx context.Context, peerID string) (*PingResponse, error) {
 	peer, exists := pm.GetPeer(peerID)
 	if !exists {
@@ -145,6 +146,7 @@ func (pm *PeerManager) PingPeer(ctx context.Context, peerID string) (*PingRespon
 	return peer.Client.Ping(ctx, req)
 }
 
+// GetPeerHealth retrieves the health status of a peer.
 func (pm *PeerManager) GetPeerHealth(ctx context.Context, peerID string) (*HealthResponse, error) {
 	peer, exists := pm.GetPeer(peerID)
 	if !exists {
@@ -158,6 +160,7 @@ func (pm *PeerManager) GetPeerHealth(ctx context.Context, peerID string) (*Healt
 	return peer.Client.GetHealth(ctx, req)
 }
 
+// GetPeerNodeInfo retrieves node information from a peer.
 func (pm *PeerManager) GetPeerNodeInfo(ctx context.Context, peerID string) (*NodeInfoResponse, error) {
 	peer, exists := pm.GetPeer(peerID)
 	if !exists {
@@ -171,32 +174,22 @@ func (pm *PeerManager) GetPeerNodeInfo(ctx context.Context, peerID string) (*Nod
 	return peer.Client.GetNodeInfo(ctx, req)
 }
 
-func (pm *PeerManager) NotifyHealthChange(ctx context.Context, failedNodeID, status, message string) error {
-	peers := pm.GetAllPeers()
-	
-	req := &HealthChangeRequest{
-		SenderId:     pm.nodeID,
-		FailedNodeId: failedNodeID,
-		Status:       status,
-		Message:      message,
-		Timestamp:    time.Now().Unix(),
+// SyncTopology requests topology synchronization from a peer.
+func (pm *PeerManager) SyncTopology(ctx context.Context, peerID string, version int64) (*TopologySyncResponse, error) {
+	peer, exists := pm.GetPeer(peerID)
+	if !exists {
+		return nil, fmt.Errorf("peer %s not found", peerID)
 	}
 
-	var lastErr error
-	for _, peer := range peers {
-		if peer.Info.ID == failedNodeID {
-			continue
-		}
-
-		_, err := peer.Client.NotifyHealthChange(ctx, req)
-		if err != nil {
-			lastErr = err
-		}
+	req := &TopologySyncRequest{
+		SenderId: pm.nodeID,
+		Version:  version,
 	}
 
-	return lastErr
+	return peer.Client.SyncTopology(ctx, req)
 }
 
+// Close closes all peer connections.
 func (pm *PeerManager) Close() error {
 	pm.mu.Lock()
 	defer pm.mu.Unlock()
@@ -212,138 +205,22 @@ func (pm *PeerManager) Close() error {
 	return lastErr
 }
 
+// Count returns the number of connected peers.
 func (pm *PeerManager) Count() int {
 	pm.mu.RLock()
 	defer pm.mu.RUnlock()
 	return len(pm.peers)
 }
 
-func (pm *PeerManager) ExecuteFunction(ctx context.Context, peerID, functionName string, parameters []string) (*FunctionResponse, error) {
-	peer, exists := pm.GetPeer(peerID)
-	if !exists {
-		return nil, fmt.Errorf("peer %s not found", peerID)
-	}
-
-	req := &FunctionRequest{
-		SenderId:     pm.nodeID,
-		FunctionName: functionName,
-		Parameters:   parameters,
-		Timestamp:    time.Now().Unix(),
-	}
-
-	return peer.Client.ExecuteFunction(ctx, req)
-}
-
-func (pm *PeerManager) SendMessage(ctx context.Context, peerID, message string) (*MessageResponse, error) {
-	peer, exists := pm.GetPeer(peerID)
-	if !exists {
-		return nil, fmt.Errorf("peer %s not found", peerID)
-	}
-
-	req := &MessageRequest{
-		SenderId:  pm.nodeID,
-		Message:   message,
-		Timestamp: time.Now().Unix(),
-	}
-
-	return peer.Client.SendMessage(ctx, req)
-}
-
-func (pm *PeerManager) InviteToRoom(ctx context.Context, peerID, roomID string) error {
-	peer, exists := pm.GetPeer(peerID)
-	if !exists {
-		return fmt.Errorf("peer %s not found", peerID)
-	}
-
-	req := &RoomInviteRequest{
-		SenderId:  pm.nodeID,
-		RoomId:    roomID,
-		InviteeId: peerID,
-	}
-
-	resp, err := peer.Client.InviteToRoom(ctx, req)
-	if err != nil {
-		return err
-	}
-
-	if !resp.Acknowledged {
-		return fmt.Errorf("invitation not acknowledged by peer %s", peerID)
-	}
-
-	return nil
-}
-
-func (pm *PeerManager) JoinRoom(ctx context.Context, hostID, roomID string) (*JoinRoomResponse, error) {
-	peer, exists := pm.GetPeer(hostID)
-	if !exists {
-		return nil, fmt.Errorf("host peer %s not found", hostID)
-	}
-
-	req := &JoinRoomRequest{
-		SenderId: pm.nodeID,
-		RoomId:   roomID,
-		HostId:   hostID,
-	}
-
-	return peer.Client.JoinRoom(ctx, req)
-}
-
-func (pm *PeerManager) LeaveRoom(ctx context.Context, hostID, roomID string) error {
-	peer, exists := pm.GetPeer(hostID)
-	if !exists {
-		return fmt.Errorf("host peer %s not found", hostID)
-	}
-
-	req := &LeaveRoomRequest{
-		SenderId: pm.nodeID,
-		RoomId:   roomID,
-	}
-
-	resp, err := peer.Client.LeaveRoom(ctx, req)
-	if err != nil {
-		return err
-	}
-
-	if !resp.Success {
-		return fmt.Errorf("failed to leave room: %s", resp.Error)
-	}
-
-	return nil
-}
-
-func (pm *PeerManager) SendRoomMessage(ctx context.Context, hostID, roomID, message string) error {
-	peer, exists := pm.GetPeer(hostID)
-	if !exists {
-		return fmt.Errorf("host peer %s not found", hostID)
-	}
-
-	req := &RoomMessageRequest{
-		SenderId:  pm.nodeID,
-		RoomId:    roomID,
-		Message:   message,
-		Timestamp: time.Now().Unix(),
-	}
-
-	resp, err := peer.Client.SendRoomMessage(ctx, req)
-	if err != nil {
-		return err
-	}
-
-	if !resp.Acknowledged {
-		return fmt.Errorf("room message not acknowledged: %s", resp.Error)
-	}
-
-	return nil
-}
-
+// IsConnected checks if a peer connection is in READY state.
 func (pm *PeerManager) IsConnected(peerID string) bool {
 	pm.mu.RLock()
 	defer pm.mu.RUnlock()
-	
+
 	peer, exists := pm.peers[peerID]
 	if !exists {
 		return false
 	}
-	
+
 	return peer.Conn.GetState().String() == "READY"
 }

@@ -267,7 +267,7 @@ func saveCertificate(filename string, cert *x509.Certificate) error {
 	if err != nil {
 		return fmt.Errorf("failed to create certificate file: %w", err)
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 
 	err = pem.Encode(file, &pem.Block{
 		Type:  "CERTIFICATE",
@@ -286,7 +286,7 @@ func savePrivateKey(filename string, key *rsa.PrivateKey) error {
 	if err != nil {
 		return fmt.Errorf("failed to create key file: %w", err)
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 
 	err = pem.Encode(file, &pem.Block{
 		Type:  "RSA PRIVATE KEY",

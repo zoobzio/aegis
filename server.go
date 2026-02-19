@@ -10,64 +10,83 @@ import (
 	"google.golang.org/grpc/credentials"
 )
 
+// ServiceRegistrar is called to register additional gRPC services.
+type ServiceRegistrar func(*grpc.Server)
+
+// MeshServer handles gRPC mesh service requests.
 type MeshServer struct {
 	UnimplementedMeshServiceServer
-	node      *Node
-	server    *grpc.Server
-	listener  net.Listener
-	tlsConfig *TLSConfig
+	node       *Node
+	server     *grpc.Server
+	listener   net.Listener
+	tlsConfig  *TLSConfig
+	registrars []ServiceRegistrar
 }
 
+// NewMeshServer creates a new mesh server for the node.
 func NewMeshServer(node *Node) *MeshServer {
 	return &MeshServer{
 		node: node,
 	}
 }
 
+// SetTLSConfig sets the TLS configuration for the server.
 func (ms *MeshServer) SetTLSConfig(tlsConfig *TLSConfig) {
 	ms.tlsConfig = tlsConfig
 }
 
+// RegisterService adds a service registrar to be called when the server starts.
+func (ms *MeshServer) RegisterService(r ServiceRegistrar) {
+	ms.registrars = append(ms.registrars, r)
+}
+
+// Start starts the gRPC server.
 func (ms *MeshServer) Start() error {
 	if ms.node == nil {
 		return fmt.Errorf("node cannot be nil")
 	}
-	
-	// TLS is required
+
 	if ms.tlsConfig == nil {
 		return fmt.Errorf("TLS configuration is required but not set")
 	}
 
-	listener, err := net.Listen("tcp", ms.node.Address)
+	lc := &net.ListenConfig{}
+	listener, err := lc.Listen(context.Background(), "tcp", ms.node.Address)
 	if err != nil {
 		return fmt.Errorf("failed to listen on %s: %w", ms.node.Address, err)
 	}
 
 	ms.listener = listener
-	
-	// Configure gRPC server with TLS
+
 	creds := credentials.NewTLS(ms.tlsConfig.GetServerTLSConfig())
 	opts := []grpc.ServerOption{grpc.Creds(creds)}
-	
+
 	ms.server = grpc.NewServer(opts...)
 	RegisterMeshServiceServer(ms.server, ms)
 
+	// Register additional services
+	for _, r := range ms.registrars {
+		r(ms.server)
+	}
+
 	go func() {
-		ms.server.Serve(listener)
+		_ = ms.server.Serve(listener)
 	}()
 
 	return nil
 }
 
+// Stop gracefully stops the gRPC server.
 func (ms *MeshServer) Stop() {
 	if ms.server != nil {
 		ms.server.GracefulStop()
 	}
 	if ms.listener != nil {
-		ms.listener.Close()
+		_ = ms.listener.Close()
 	}
 }
 
+// Ping responds to ping requests.
 func (ms *MeshServer) Ping(ctx context.Context, req *PingRequest) (*PingResponse, error) {
 	return &PingResponse{
 		ReceiverId: ms.node.ID,
@@ -76,6 +95,7 @@ func (ms *MeshServer) Ping(ctx context.Context, req *PingRequest) (*PingResponse
 	}, nil
 }
 
+// GetHealth returns the health status of this node.
 func (ms *MeshServer) GetHealth(ctx context.Context, req *HealthRequest) (*HealthResponse, error) {
 	if ms.node.Health == nil {
 		return &HealthResponse{
@@ -98,6 +118,7 @@ func (ms *MeshServer) GetHealth(ctx context.Context, req *HealthRequest) (*Healt
 	}, nil
 }
 
+// GetNodeInfo returns information about this node.
 func (ms *MeshServer) GetNodeInfo(ctx context.Context, req *NodeInfoRequest) (*NodeInfoResponse, error) {
 	healthResp, err := ms.GetHealth(ctx, &HealthRequest{SenderId: req.SenderId})
 	if err != nil {
@@ -113,182 +134,90 @@ func (ms *MeshServer) GetNodeInfo(ctx context.Context, req *NodeInfoRequest) (*N
 	}, nil
 }
 
-func (ms *MeshServer) NotifyHealthChange(ctx context.Context, req *HealthChangeRequest) (*HealthChangeResponse, error) {
-	return &HealthChangeResponse{
-		Acknowledged: true,
-		ReceiverId:   ms.node.ID,
+// SyncTopology handles topology synchronization requests.
+func (ms *MeshServer) SyncTopology(ctx context.Context, req *TopologySyncRequest) (*TopologySyncResponse, error) {
+	if ms.node.Topology == nil {
+		return &TopologySyncResponse{
+			Version:   0,
+			UpdatedAt: time.Now().Unix(),
+			Nodes:     nil,
+		}, nil
+	}
+
+	nodes := ms.node.Topology.GetAllNodes()
+	protoNodes := make([]*TopologyNode, 0, len(nodes))
+
+	for _, node := range nodes {
+		protoNodes = append(protoNodes, nodeInfoToProto(node))
+	}
+
+	return &TopologySyncResponse{
+		Version:   ms.node.Topology.GetVersion(),
+		UpdatedAt: ms.node.Topology.UpdatedAt.Unix(),
+		Nodes:     protoNodes,
 	}, nil
 }
 
-func (ms *MeshServer) ExecuteFunction(ctx context.Context, req *FunctionRequest) (*FunctionResponse, error) {
-	if ms.node.Functions == nil {
-		return &FunctionResponse{
-			ReceiverId: ms.node.ID,
-			Success:    false,
-			Result:     "",
-			Error:      "function registry not initialized",
-			Timestamp:  time.Now().Unix(),
+// GetTopology returns the current topology.
+func (ms *MeshServer) GetTopology(ctx context.Context, req *GetTopologyRequest) (*GetTopologyResponse, error) {
+	if ms.node.Topology == nil {
+		return &GetTopologyResponse{
+			Version: 0,
+			Nodes:   nil,
 		}, nil
 	}
 
-	result, err := ms.node.Functions.Execute(ctx, req.FunctionName, req.Parameters)
-	
-	if err != nil {
-		return &FunctionResponse{
-			ReceiverId: ms.node.ID,
-			Success:    false,
-			Result:     "",
-			Error:      err.Error(),
-			Timestamp:  time.Now().Unix(),
-		}, nil
+	nodes := ms.node.Topology.GetAllNodes()
+	protoNodes := make([]*TopologyNode, 0, len(nodes))
+
+	for _, node := range nodes {
+		protoNodes = append(protoNodes, nodeInfoToProto(node))
 	}
 
-	return &FunctionResponse{
-		ReceiverId: ms.node.ID,
-		Success:    true,
-		Result:     result,
-		Error:      "",
-		Timestamp:  time.Now().Unix(),
+	return &GetTopologyResponse{
+		Version: ms.node.Topology.GetVersion(),
+		Nodes:   protoNodes,
 	}, nil
 }
 
-func (ms *MeshServer) SendMessage(ctx context.Context, req *MessageRequest) (*MessageResponse, error) {
-	return &MessageResponse{
-		ReceiverId: ms.node.ID,
-		Received:   true,
-		Timestamp:  time.Now().Unix(),
-	}, nil
+// nodeInfoToProto converts a NodeInfo to a TopologyNode proto message.
+func nodeInfoToProto(node NodeInfo) *TopologyNode {
+	protoServices := make([]*Service, 0, len(node.Services))
+	for _, svc := range node.Services {
+		protoServices = append(protoServices, &Service{
+			Name:    svc.Name,
+			Version: svc.Version,
+		})
+	}
+
+	return &TopologyNode{
+		Id:        node.ID,
+		Name:      node.Name,
+		Type:      string(node.Type),
+		Address:   node.Address,
+		JoinedAt:  node.JoinedAt.Unix(),
+		UpdatedAt: node.UpdatedAt.Unix(),
+		Services:  protoServices,
+	}
 }
 
-func (ms *MeshServer) CreateRoom(ctx context.Context, req *CreateRoomRequest) (*CreateRoomResponse, error) {
-	if ms.node.Rooms == nil {
-		return &CreateRoomResponse{
-			Success: false,
-			RoomId:  "",
-			Error:   "room manager not initialized",
-		}, nil
+// protoToNodeInfo converts a TopologyNode proto message to a NodeInfo.
+func protoToNodeInfo(node *TopologyNode) NodeInfo {
+	services := make([]ServiceInfo, 0, len(node.Services))
+	for _, svc := range node.Services {
+		services = append(services, ServiceInfo{
+			Name:    svc.Name,
+			Version: svc.Version,
+		})
 	}
-	
-	_, err := ms.node.Rooms.CreateRoom(req.RoomId, req.RoomName, ms.node.ID)
-	if err != nil {
-		return &CreateRoomResponse{
-			Success: false,
-			RoomId:  "",
-			Error:   err.Error(),
-		}, nil
-	}
-	
-	return &CreateRoomResponse{
-		Success: true,
-		RoomId:  req.RoomId,
-		Error:   "",
-	}, nil
-}
 
-func (ms *MeshServer) InviteToRoom(ctx context.Context, req *RoomInviteRequest) (*RoomInviteResponse, error) {
-	return &RoomInviteResponse{
-		ReceiverId:   ms.node.ID,
-		Acknowledged: true,
-	}, nil
-}
-
-func (ms *MeshServer) JoinRoom(ctx context.Context, req *JoinRoomRequest) (*JoinRoomResponse, error) {
-	if ms.node.Rooms == nil {
-		return &JoinRoomResponse{
-			Success: false,
-			Error:   "room manager not initialized",
-			Members: nil,
-		}, nil
+	return NodeInfo{
+		ID:        node.Id,
+		Name:      node.Name,
+		Type:      NodeType(node.Type),
+		Address:   node.Address,
+		Services:  services,
+		JoinedAt:  time.Unix(node.JoinedAt, 0),
+		UpdatedAt: time.Unix(node.UpdatedAt, 0),
 	}
-	
-	room, exists := ms.node.Rooms.GetHostedRoom(req.RoomId)
-	if !exists {
-		return &JoinRoomResponse{
-			Success: false,
-			Error:   "room not found",
-			Members: nil,
-		}, nil
-	}
-	
-	err := room.AddMember(req.SenderId)
-	if err != nil {
-		return &JoinRoomResponse{
-			Success: false,
-			Error:   err.Error(),
-			Members: nil,
-		}, nil
-	}
-	
-	return &JoinRoomResponse{
-		Success: true,
-		Error:   "",
-		Members: room.GetMembers(),
-	}, nil
-}
-
-func (ms *MeshServer) LeaveRoom(ctx context.Context, req *LeaveRoomRequest) (*LeaveRoomResponse, error) {
-	if ms.node.Rooms == nil {
-		return &LeaveRoomResponse{
-			Success: false,
-			Error:   "room manager not initialized",
-		}, nil
-	}
-	
-	room, exists := ms.node.Rooms.GetHostedRoom(req.RoomId)
-	if !exists {
-		return &LeaveRoomResponse{
-			Success: false,
-			Error:   "room not found",
-		}, nil
-	}
-	
-	err := room.RemoveMember(req.SenderId)
-	if err != nil {
-		return &LeaveRoomResponse{
-			Success: false,
-			Error:   err.Error(),
-		}, nil
-	}
-	
-	return &LeaveRoomResponse{
-		Success: true,
-		Error:   "",
-	}, nil
-}
-
-func (ms *MeshServer) SendRoomMessage(ctx context.Context, req *RoomMessageRequest) (*RoomMessageResponse, error) {
-	if ms.node.Rooms == nil {
-		return &RoomMessageResponse{
-			Acknowledged: false,
-			Error:        "room manager not initialized",
-		}, nil
-	}
-	
-	room, exists := ms.node.Rooms.GetHostedRoom(req.RoomId)
-	if !exists {
-		return &RoomMessageResponse{
-			Acknowledged: false,
-			Error:        "room not found",
-		}, nil
-	}
-	
-	if !room.IsMember(req.SenderId) {
-		return &RoomMessageResponse{
-			Acknowledged: false,
-			Error:        "sender is not a room member",
-		}, nil
-	}
-	
-	// Relay message to all members
-	members := room.GetMembers()
-	for _, memberID := range members {
-		if memberID != req.SenderId && memberID != ms.node.ID {
-			ms.node.SendMessage(ctx, memberID, fmt.Sprintf("[Room %s] %s: %s", req.RoomId, req.SenderId, req.Message))
-		}
-	}
-	
-	return &RoomMessageResponse{
-		Acknowledged: true,
-		Error:        "",
-	}, nil
 }

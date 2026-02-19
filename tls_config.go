@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 )
 
 // CertificateSource defines how certificates are loaded
@@ -251,8 +250,8 @@ func ParseCertificateChain(pemData []byte) ([]*x509.Certificate, error) {
 	return certs, nil
 }
 
-// GenerateCertificateRequest generates a CSR for external CA signing
-func GenerateCertificateRequest(nodeID string, keyFile string) ([]byte, error) {
+// GenerateCertificateRequest generates a CSR for external CA signing.
+func GenerateCertificateRequest(_ string, _ string) ([]byte, error) {
 	// This would generate a CSR that can be sent to an external CA
 	// Implementation depends on your CA infrastructure
 	return nil, fmt.Errorf("not implemented: use external tools to generate CSR")

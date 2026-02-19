@@ -129,7 +129,7 @@ func TestNodeHealthMethods(t *testing.T) {
 		t.Error("new node should not be healthy initially")
 	}
 	
-	status, message := node.GetHealth()
+	status, _ := node.GetHealth()
 	if status != HealthStatusUnknown {
 		t.Errorf("expected initial status %s, got %s", HealthStatusUnknown, status)
 	}
@@ -140,7 +140,7 @@ func TestNodeHealthMethods(t *testing.T) {
 		t.Error("node should be healthy after setting health")
 	}
 	
-	status, message = node.GetHealth()
+	status, message := node.GetHealth()
 	if status != HealthStatusHealthy {
 		t.Errorf("expected status %s, got %s", HealthStatusHealthy, status)
 	}

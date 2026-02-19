@@ -7,6 +7,7 @@ import (
 	"time"
 )
 
+// HealthStatus represents the health state of a node.
 type HealthStatus string
 
 const (
@@ -15,6 +16,7 @@ const (
 	HealthStatusUnknown   HealthStatus = "unknown"
 )
 
+// HealthInfo contains health status information for a node.
 type HealthInfo struct {
 	Status      HealthStatus `json:"status"`
 	LastChecked time.Time    `json:"last_checked"`
@@ -23,6 +25,7 @@ type HealthInfo struct {
 	mu          sync.RWMutex `json:"-"`
 }
 
+// NewHealthInfo creates a new health info with unknown status.
 func NewHealthInfo() *HealthInfo {
 	return &HealthInfo{
 		Status:      HealthStatusUnknown,
@@ -73,15 +76,18 @@ func (h *HealthInfo) String() string {
 	return result
 }
 
+// HealthChecker defines the interface for health check implementations.
 type HealthChecker interface {
 	Check(ctx context.Context) error
 	Name() string
 }
 
+// PingHealthChecker performs simple ping-based health checks.
 type PingHealthChecker struct {
 	name string
 }
 
+// NewPingHealthChecker creates a new ping-based health checker.
 func NewPingHealthChecker(name string) *PingHealthChecker {
 	return &PingHealthChecker{name: name}
 }
@@ -94,11 +100,13 @@ func (p *PingHealthChecker) Name() string {
 	return p.name
 }
 
+// FunctionHealthChecker performs health checks using a custom function.
 type FunctionHealthChecker struct {
 	name     string
 	checkFn  func(ctx context.Context) error
 }
 
+// NewFunctionHealthChecker creates a new function-based health checker.
 func NewFunctionHealthChecker(name string, checkFn func(ctx context.Context) error) *FunctionHealthChecker {
 	return &FunctionHealthChecker{
 		name:    name,

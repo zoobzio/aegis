@@ -1,0 +1,71 @@
+syntax = "proto3";
+
+package aegis.identity.v1;
+
+option go_package = "github.com/zoobzio/aegis/proto/identity";
+
+// IdentityService provides identity operations for mesh services.
+// Implemented by morpheus, consumed by other services requiring authentication.
+service IdentityService {
+  // ValidateSession checks if a session token is valid and returns user info.
+  rpc ValidateSession(ValidateSessionRequest) returns (ValidateSessionResponse);
+
+  // GetUser retrieves a user by ID.
+  rpc GetUser(GetUserRequest) returns (GetUserResponse);
+
+  // GetUserByEmail retrieves a user by email address.
+  rpc GetUserByEmail(GetUserByEmailRequest) returns (GetUserResponse);
+
+  // ListProviders returns the OAuth providers linked to a user.
+  rpc ListProviders(ListProvidersRequest) returns (ListProvidersResponse);
+}
+
+// ValidateSessionRequest contains the session token to validate.
+message ValidateSessionRequest {
+  string token = 1;
+}
+
+// ValidateSessionResponse contains validation result and user info if valid.
+message ValidateSessionResponse {
+  bool valid = 1;
+  string user_id = 2;
+  int64 expires_at = 3;  // Unix timestamp, 0 if invalid
+}
+
+// GetUserRequest identifies a user by ID.
+message GetUserRequest {
+  string user_id = 1;
+}
+
+// GetUserByEmailRequest identifies a user by email.
+message GetUserByEmailRequest {
+  string email = 1;
+}
+
+// GetUserResponse contains user information.
+// Email is not masked in mesh responses - masking is a boundary concern.
+message GetUserResponse {
+  string id = 1;
+  string email = 2;
+  string name = 3;
+  string avatar_url = 4;
+  bool email_verified = 5;
+  int64 created_at = 6;  // Unix timestamp
+}
+
+// ListProvidersRequest identifies the user whose providers to list.
+message ListProvidersRequest {
+  string user_id = 1;
+}
+
+// ListProvidersResponse contains the user's linked OAuth providers.
+message ListProvidersResponse {
+  repeated Provider providers = 1;
+}
+
+// Provider represents a linked OAuth provider.
+message Provider {
+  string type = 1;             // "github" or "google"
+  string provider_user_id = 2; // External provider's user ID
+  int64 linked_at = 3;         // Unix timestamp
+}
