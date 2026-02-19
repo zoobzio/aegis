@@ -46,7 +46,7 @@ linters:
       - path: (config|tls|tls_config)\.go
         text: "G304"
 
-settings:
+linters-settings:
   errcheck:
     check-type-assertions: true
   govet:
