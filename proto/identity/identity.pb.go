@@ -499,10 +499,9 @@ func (x *RevokeSessionRequest) GetToken() string {
 	return ""
 }
 
-// RevokeSessionResponse indicates revocation success.
+// RevokeSessionResponse is empty on success; errors use gRPC status.
 type RevokeSessionResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -535,13 +534,6 @@ func (x *RevokeSessionResponse) ProtoReflect() protoreflect.Message {
 // Deprecated: Use RevokeSessionResponse.ProtoReflect.Descriptor instead.
 func (*RevokeSessionResponse) Descriptor() ([]byte, []int) {
 	return file_proto_identity_identity_proto_rawDescGZIP(), []int{9}
-}
-
-func (x *RevokeSessionResponse) GetSuccess() bool {
-	if x != nil {
-		return x.Success
-	}
-	return false
 }
 
 // RevokeUserSessionsRequest identifies the user whose sessions to revoke.
@@ -592,7 +584,7 @@ func (x *RevokeUserSessionsRequest) GetUserId() string {
 // RevokeUserSessionsResponse contains the count of revoked sessions.
 type RevokeUserSessionsResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	RevokedCount  int32                  `protobuf:"varint,1,opt,name=revoked_count,json=revokedCount,proto3" json:"revoked_count,omitempty"`
+	RevokedCount  uint32                 `protobuf:"varint,1,opt,name=revoked_count,json=revokedCount,proto3" json:"revoked_count,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -627,7 +619,7 @@ func (*RevokeUserSessionsResponse) Descriptor() ([]byte, []int) {
 	return file_proto_identity_identity_proto_rawDescGZIP(), []int{11}
 }
 
-func (x *RevokeUserSessionsResponse) GetRevokedCount() int32 {
+func (x *RevokeUserSessionsResponse) GetRevokedCount() uint32 {
 	if x != nil {
 		return x.RevokedCount
 	}
@@ -835,13 +827,12 @@ const file_proto_identity_identity_proto_rawDesc = "" +
 	"\x10provider_user_id\x18\x02 \x01(\tR\x0eproviderUserId\x12\x1b\n" +
 	"\tlinked_at\x18\x03 \x01(\x03R\blinkedAt\",\n" +
 	"\x14RevokeSessionRequest\x12\x14\n" +
-	"\x05token\x18\x01 \x01(\tR\x05token\"1\n" +
-	"\x15RevokeSessionResponse\x12\x18\n" +
-	"\asuccess\x18\x01 \x01(\bR\asuccess\"4\n" +
+	"\x05token\x18\x01 \x01(\tR\x05token\"\x17\n" +
+	"\x15RevokeSessionResponse\"4\n" +
 	"\x19RevokeUserSessionsRequest\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\tR\x06userId\"A\n" +
 	"\x1aRevokeUserSessionsResponse\x12#\n" +
-	"\rrevoked_count\x18\x01 \x01(\x05R\frevokedCount\"2\n" +
+	"\rrevoked_count\x18\x01 \x01(\rR\frevokedCount\"2\n" +
 	"\x17ListUserSessionsRequest\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\tR\x06userId\"V\n" +
 	"\x18ListUserSessionsResponse\x12:\n" +

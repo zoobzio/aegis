@@ -84,10 +84,8 @@ message RevokeSessionRequest {
   string token = 1;
 }
 
-// RevokeSessionResponse indicates revocation success.
-message RevokeSessionResponse {
-  bool success = 1;
-}
+// RevokeSessionResponse is empty on success; errors use gRPC status.
+message RevokeSessionResponse {}
 
 // RevokeUserSessionsRequest identifies the user whose sessions to revoke.
 message RevokeUserSessionsRequest {
@@ -96,7 +94,7 @@ message RevokeUserSessionsRequest {
 
 // RevokeUserSessionsResponse contains the count of revoked sessions.
 message RevokeUserSessionsResponse {
-  int32 revoked_count = 1;
+  uint32 revoked_count = 1;
 }
 
 // ListUserSessionsRequest identifies the user whose sessions to list.

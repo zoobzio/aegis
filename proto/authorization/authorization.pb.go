@@ -164,10 +164,9 @@ func (x *RegisterGuardRequest) GetPermissions() []string {
 	return nil
 }
 
-// RegisterGuardResponse indicates registration success.
+// RegisterGuardResponse is empty on success; errors use gRPC status.
 type RegisterGuardResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -200,13 +199,6 @@ func (x *RegisterGuardResponse) ProtoReflect() protoreflect.Message {
 // Deprecated: Use RegisterGuardResponse.ProtoReflect.Descriptor instead.
 func (*RegisterGuardResponse) Descriptor() ([]byte, []int) {
 	return file_proto_authorization_authorization_proto_rawDescGZIP(), []int{3}
-}
-
-func (x *RegisterGuardResponse) GetSuccess() bool {
-	if x != nil {
-		return x.Success
-	}
-	return false
 }
 
 // ValidateGuardRequest checks a token against a guard.
@@ -360,10 +352,9 @@ func (x *RevokeTokenRequest) GetFingerprint() string {
 	return ""
 }
 
-// RevokeTokenResponse indicates revocation success.
+// RevokeTokenResponse is empty on success; errors use gRPC status.
 type RevokeTokenResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -398,13 +389,6 @@ func (*RevokeTokenResponse) Descriptor() ([]byte, []int) {
 	return file_proto_authorization_authorization_proto_rawDescGZIP(), []int{7}
 }
 
-func (x *RevokeTokenResponse) GetSuccess() bool {
-	if x != nil {
-		return x.Success
-	}
-	return false
-}
-
 var File_proto_authorization_authorization_proto protoreflect.FileDescriptor
 
 const file_proto_authorization_authorization_proto_rawDesc = "" +
@@ -417,9 +401,8 @@ const file_proto_authorization_authorization_proto_rawDesc = "" +
 	"expires_at\x18\x02 \x01(\x03R\texpiresAt\"S\n" +
 	"\x14RegisterGuardRequest\x12\x19\n" +
 	"\bguard_id\x18\x01 \x01(\tR\aguardId\x12 \n" +
-	"\vpermissions\x18\x02 \x03(\tR\vpermissions\"1\n" +
-	"\x15RegisterGuardResponse\x12\x18\n" +
-	"\asuccess\x18\x01 \x01(\bR\asuccess\"G\n" +
+	"\vpermissions\x18\x02 \x03(\tR\vpermissions\"\x17\n" +
+	"\x15RegisterGuardResponse\"G\n" +
 	"\x14ValidateGuardRequest\x12\x19\n" +
 	"\bguard_id\x18\x01 \x01(\tR\aguardId\x12\x14\n" +
 	"\x05token\x18\x02 \x01(\tR\x05token\"b\n" +
@@ -427,9 +410,8 @@ const file_proto_authorization_authorization_proto_rawDesc = "" +
 	"\aallowed\x18\x01 \x01(\bR\aallowed\x12/\n" +
 	"\x13missing_permissions\x18\x02 \x03(\tR\x12missingPermissions\"6\n" +
 	"\x12RevokeTokenRequest\x12 \n" +
-	"\vfingerprint\x18\x01 \x01(\tR\vfingerprint\"/\n" +
-	"\x13RevokeTokenResponse\x12\x18\n" +
-	"\asuccess\x18\x01 \x01(\bR\asuccess2\xb9\x03\n" +
+	"\vfingerprint\x18\x01 \x01(\tR\vfingerprint\"\x15\n" +
+	"\x13RevokeTokenResponse2\xb9\x03\n" +
 	"\x14AuthorizationService\x12]\n" +
 	"\bGetToken\x12'.aegis.authorization.v1.GetTokenRequest\x1a(.aegis.authorization.v1.GetTokenResponse\x12l\n" +
 	"\rRegisterGuard\x12,.aegis.authorization.v1.RegisterGuardRequest\x1a-.aegis.authorization.v1.RegisterGuardResponse\x12l\n" +

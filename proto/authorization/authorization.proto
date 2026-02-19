@@ -37,10 +37,8 @@ message RegisterGuardRequest {
   repeated string permissions = 2;  // Required permissions
 }
 
-// RegisterGuardResponse indicates registration success.
-message RegisterGuardResponse {
-  bool success = 1;
-}
+// RegisterGuardResponse is empty on success; errors use gRPC status.
+message RegisterGuardResponse {}
 
 // ValidateGuardRequest checks a token against a guard.
 message ValidateGuardRequest {
@@ -59,7 +57,5 @@ message RevokeTokenRequest {
   string fingerprint = 1;  // Certificate fingerprint
 }
 
-// RevokeTokenResponse indicates revocation success.
-message RevokeTokenResponse {
-  bool success = 1;
-}
+// RevokeTokenResponse is empty on success; errors use gRPC status.
+message RevokeTokenResponse {}
