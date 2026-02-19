@@ -19,10 +19,13 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	IdentityService_ValidateSession_FullMethodName = "/aegis.identity.v1.IdentityService/ValidateSession"
-	IdentityService_GetUser_FullMethodName         = "/aegis.identity.v1.IdentityService/GetUser"
-	IdentityService_GetUserByEmail_FullMethodName  = "/aegis.identity.v1.IdentityService/GetUserByEmail"
-	IdentityService_ListProviders_FullMethodName   = "/aegis.identity.v1.IdentityService/ListProviders"
+	IdentityService_ValidateSession_FullMethodName    = "/aegis.identity.v1.IdentityService/ValidateSession"
+	IdentityService_GetUser_FullMethodName            = "/aegis.identity.v1.IdentityService/GetUser"
+	IdentityService_GetUserByEmail_FullMethodName     = "/aegis.identity.v1.IdentityService/GetUserByEmail"
+	IdentityService_ListProviders_FullMethodName      = "/aegis.identity.v1.IdentityService/ListProviders"
+	IdentityService_RevokeSession_FullMethodName      = "/aegis.identity.v1.IdentityService/RevokeSession"
+	IdentityService_RevokeUserSessions_FullMethodName = "/aegis.identity.v1.IdentityService/RevokeUserSessions"
+	IdentityService_ListUserSessions_FullMethodName   = "/aegis.identity.v1.IdentityService/ListUserSessions"
 )
 
 // IdentityServiceClient is the client API for IdentityService service.
@@ -40,6 +43,12 @@ type IdentityServiceClient interface {
 	GetUserByEmail(ctx context.Context, in *GetUserByEmailRequest, opts ...grpc.CallOption) (*GetUserResponse, error)
 	// ListProviders returns the OAuth providers linked to a user.
 	ListProviders(ctx context.Context, in *ListProvidersRequest, opts ...grpc.CallOption) (*ListProvidersResponse, error)
+	// RevokeSession revokes a specific session by token.
+	RevokeSession(ctx context.Context, in *RevokeSessionRequest, opts ...grpc.CallOption) (*RevokeSessionResponse, error)
+	// RevokeUserSessions revokes all sessions for a user ("logout everywhere").
+	RevokeUserSessions(ctx context.Context, in *RevokeUserSessionsRequest, opts ...grpc.CallOption) (*RevokeUserSessionsResponse, error)
+	// ListUserSessions lists active sessions for a user.
+	ListUserSessions(ctx context.Context, in *ListUserSessionsRequest, opts ...grpc.CallOption) (*ListUserSessionsResponse, error)
 }
 
 type identityServiceClient struct {
@@ -90,6 +99,36 @@ func (c *identityServiceClient) ListProviders(ctx context.Context, in *ListProvi
 	return out, nil
 }
 
+func (c *identityServiceClient) RevokeSession(ctx context.Context, in *RevokeSessionRequest, opts ...grpc.CallOption) (*RevokeSessionResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(RevokeSessionResponse)
+	err := c.cc.Invoke(ctx, IdentityService_RevokeSession_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *identityServiceClient) RevokeUserSessions(ctx context.Context, in *RevokeUserSessionsRequest, opts ...grpc.CallOption) (*RevokeUserSessionsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(RevokeUserSessionsResponse)
+	err := c.cc.Invoke(ctx, IdentityService_RevokeUserSessions_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *identityServiceClient) ListUserSessions(ctx context.Context, in *ListUserSessionsRequest, opts ...grpc.CallOption) (*ListUserSessionsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListUserSessionsResponse)
+	err := c.cc.Invoke(ctx, IdentityService_ListUserSessions_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // IdentityServiceServer is the server API for IdentityService service.
 // All implementations must embed UnimplementedIdentityServiceServer
 // for forward compatibility.
@@ -105,6 +144,12 @@ type IdentityServiceServer interface {
 	GetUserByEmail(context.Context, *GetUserByEmailRequest) (*GetUserResponse, error)
 	// ListProviders returns the OAuth providers linked to a user.
 	ListProviders(context.Context, *ListProvidersRequest) (*ListProvidersResponse, error)
+	// RevokeSession revokes a specific session by token.
+	RevokeSession(context.Context, *RevokeSessionRequest) (*RevokeSessionResponse, error)
+	// RevokeUserSessions revokes all sessions for a user ("logout everywhere").
+	RevokeUserSessions(context.Context, *RevokeUserSessionsRequest) (*RevokeUserSessionsResponse, error)
+	// ListUserSessions lists active sessions for a user.
+	ListUserSessions(context.Context, *ListUserSessionsRequest) (*ListUserSessionsResponse, error)
 	mustEmbedUnimplementedIdentityServiceServer()
 }
 
@@ -126,6 +171,15 @@ func (UnimplementedIdentityServiceServer) GetUserByEmail(context.Context, *GetUs
 }
 func (UnimplementedIdentityServiceServer) ListProviders(context.Context, *ListProvidersRequest) (*ListProvidersResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListProviders not implemented")
+}
+func (UnimplementedIdentityServiceServer) RevokeSession(context.Context, *RevokeSessionRequest) (*RevokeSessionResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RevokeSession not implemented")
+}
+func (UnimplementedIdentityServiceServer) RevokeUserSessions(context.Context, *RevokeUserSessionsRequest) (*RevokeUserSessionsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RevokeUserSessions not implemented")
+}
+func (UnimplementedIdentityServiceServer) ListUserSessions(context.Context, *ListUserSessionsRequest) (*ListUserSessionsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListUserSessions not implemented")
 }
 func (UnimplementedIdentityServiceServer) mustEmbedUnimplementedIdentityServiceServer() {}
 func (UnimplementedIdentityServiceServer) testEmbeddedByValue()                         {}
@@ -220,6 +274,60 @@ func _IdentityService_ListProviders_Handler(srv interface{}, ctx context.Context
 	return interceptor(ctx, in, info, handler)
 }
 
+func _IdentityService_RevokeSession_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RevokeSessionRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(IdentityServiceServer).RevokeSession(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: IdentityService_RevokeSession_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(IdentityServiceServer).RevokeSession(ctx, req.(*RevokeSessionRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _IdentityService_RevokeUserSessions_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RevokeUserSessionsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(IdentityServiceServer).RevokeUserSessions(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: IdentityService_RevokeUserSessions_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(IdentityServiceServer).RevokeUserSessions(ctx, req.(*RevokeUserSessionsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _IdentityService_ListUserSessions_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListUserSessionsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(IdentityServiceServer).ListUserSessions(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: IdentityService_ListUserSessions_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(IdentityServiceServer).ListUserSessions(ctx, req.(*ListUserSessionsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // IdentityService_ServiceDesc is the grpc.ServiceDesc for IdentityService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -242,6 +350,18 @@ var IdentityService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListProviders",
 			Handler:    _IdentityService_ListProviders_Handler,
+		},
+		{
+			MethodName: "RevokeSession",
+			Handler:    _IdentityService_RevokeSession_Handler,
+		},
+		{
+			MethodName: "RevokeUserSessions",
+			Handler:    _IdentityService_RevokeUserSessions_Handler,
+		},
+		{
+			MethodName: "ListUserSessions",
+			Handler:    _IdentityService_ListUserSessions_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

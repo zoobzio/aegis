@@ -60,4 +60,5 @@ ci: clean check coverage test-bench ## Full CI simulation
 proto: ## Regenerate protobuf code
 	@protoc --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative mesh.proto
 	@protoc --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative proto/identity/identity.proto
+	@protoc --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative proto/authorization/authorization.proto
 	@echo "Proto files regenerated"

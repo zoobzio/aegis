@@ -18,6 +18,15 @@ service IdentityService {
 
   // ListProviders returns the OAuth providers linked to a user.
   rpc ListProviders(ListProvidersRequest) returns (ListProvidersResponse);
+
+  // RevokeSession revokes a specific session by token.
+  rpc RevokeSession(RevokeSessionRequest) returns (RevokeSessionResponse);
+
+  // RevokeUserSessions revokes all sessions for a user ("logout everywhere").
+  rpc RevokeUserSessions(RevokeUserSessionsRequest) returns (RevokeUserSessionsResponse);
+
+  // ListUserSessions lists active sessions for a user.
+  rpc ListUserSessions(ListUserSessionsRequest) returns (ListUserSessionsResponse);
 }
 
 // ValidateSessionRequest contains the session token to validate.
@@ -68,4 +77,41 @@ message Provider {
   string type = 1;             // "github" or "google"
   string provider_user_id = 2; // External provider's user ID
   int64 linked_at = 3;         // Unix timestamp
+}
+
+// RevokeSessionRequest identifies the session to revoke.
+message RevokeSessionRequest {
+  string token = 1;
+}
+
+// RevokeSessionResponse is empty on success; errors use gRPC status.
+message RevokeSessionResponse {}
+
+// RevokeUserSessionsRequest identifies the user whose sessions to revoke.
+message RevokeUserSessionsRequest {
+  string user_id = 1;
+}
+
+// RevokeUserSessionsResponse contains the count of revoked sessions.
+message RevokeUserSessionsResponse {
+  uint32 revoked_count = 1;
+}
+
+// ListUserSessionsRequest identifies the user whose sessions to list.
+message ListUserSessionsRequest {
+  string user_id = 1;
+}
+
+// ListUserSessionsResponse contains the user's active sessions.
+message ListUserSessionsResponse {
+  repeated SessionInfo sessions = 1;
+}
+
+// SessionInfo contains information about an active session.
+message SessionInfo {
+  string token_prefix = 1;  // First N chars for identification, not full token
+  int64 created_at = 2;     // Unix timestamp
+  int64 expires_at = 3;     // Unix timestamp
+  string user_agent = 4;    // Device/browser info
+  string ip_address = 5;    // Last known IP
 }
