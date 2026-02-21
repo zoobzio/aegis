@@ -19,13 +19,14 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	IdentityService_ValidateSession_FullMethodName    = "/aegis.identity.v1.IdentityService/ValidateSession"
-	IdentityService_GetUser_FullMethodName            = "/aegis.identity.v1.IdentityService/GetUser"
-	IdentityService_GetUserByEmail_FullMethodName     = "/aegis.identity.v1.IdentityService/GetUserByEmail"
-	IdentityService_ListProviders_FullMethodName      = "/aegis.identity.v1.IdentityService/ListProviders"
-	IdentityService_RevokeSession_FullMethodName      = "/aegis.identity.v1.IdentityService/RevokeSession"
-	IdentityService_RevokeUserSessions_FullMethodName = "/aegis.identity.v1.IdentityService/RevokeUserSessions"
-	IdentityService_ListUserSessions_FullMethodName   = "/aegis.identity.v1.IdentityService/ListUserSessions"
+	IdentityService_ValidateSession_FullMethodName        = "/aegis.identity.v1.IdentityService/ValidateSession"
+	IdentityService_GetUser_FullMethodName                = "/aegis.identity.v1.IdentityService/GetUser"
+	IdentityService_GetUserByEmail_FullMethodName         = "/aegis.identity.v1.IdentityService/GetUserByEmail"
+	IdentityService_ListProviders_FullMethodName          = "/aegis.identity.v1.IdentityService/ListProviders"
+	IdentityService_RevokeSession_FullMethodName          = "/aegis.identity.v1.IdentityService/RevokeSession"
+	IdentityService_RevokeUserSessions_FullMethodName     = "/aegis.identity.v1.IdentityService/RevokeUserSessions"
+	IdentityService_ListUserSessions_FullMethodName       = "/aegis.identity.v1.IdentityService/ListUserSessions"
+	IdentityService_SubscribeSessionEvents_FullMethodName = "/aegis.identity.v1.IdentityService/SubscribeSessionEvents"
 )
 
 // IdentityServiceClient is the client API for IdentityService service.
@@ -49,6 +50,9 @@ type IdentityServiceClient interface {
 	RevokeUserSessions(ctx context.Context, in *RevokeUserSessionsRequest, opts ...grpc.CallOption) (*RevokeUserSessionsResponse, error)
 	// ListUserSessions lists active sessions for a user.
 	ListUserSessions(ctx context.Context, in *ListUserSessionsRequest, opts ...grpc.CallOption) (*ListUserSessionsResponse, error)
+	// SubscribeSessionEvents streams session lifecycle events.
+	// Enables real-time cache invalidation without polling.
+	SubscribeSessionEvents(ctx context.Context, in *SubscribeSessionEventsRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[SessionEvent], error)
 }
 
 type identityServiceClient struct {
@@ -129,6 +133,25 @@ func (c *identityServiceClient) ListUserSessions(ctx context.Context, in *ListUs
 	return out, nil
 }
 
+func (c *identityServiceClient) SubscribeSessionEvents(ctx context.Context, in *SubscribeSessionEventsRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[SessionEvent], error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	stream, err := c.cc.NewStream(ctx, &IdentityService_ServiceDesc.Streams[0], IdentityService_SubscribeSessionEvents_FullMethodName, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &grpc.GenericClientStream[SubscribeSessionEventsRequest, SessionEvent]{ClientStream: stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type IdentityService_SubscribeSessionEventsClient = grpc.ServerStreamingClient[SessionEvent]
+
 // IdentityServiceServer is the server API for IdentityService service.
 // All implementations must embed UnimplementedIdentityServiceServer
 // for forward compatibility.
@@ -150,6 +173,9 @@ type IdentityServiceServer interface {
 	RevokeUserSessions(context.Context, *RevokeUserSessionsRequest) (*RevokeUserSessionsResponse, error)
 	// ListUserSessions lists active sessions for a user.
 	ListUserSessions(context.Context, *ListUserSessionsRequest) (*ListUserSessionsResponse, error)
+	// SubscribeSessionEvents streams session lifecycle events.
+	// Enables real-time cache invalidation without polling.
+	SubscribeSessionEvents(*SubscribeSessionEventsRequest, grpc.ServerStreamingServer[SessionEvent]) error
 	mustEmbedUnimplementedIdentityServiceServer()
 }
 
@@ -180,6 +206,9 @@ func (UnimplementedIdentityServiceServer) RevokeUserSessions(context.Context, *R
 }
 func (UnimplementedIdentityServiceServer) ListUserSessions(context.Context, *ListUserSessionsRequest) (*ListUserSessionsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListUserSessions not implemented")
+}
+func (UnimplementedIdentityServiceServer) SubscribeSessionEvents(*SubscribeSessionEventsRequest, grpc.ServerStreamingServer[SessionEvent]) error {
+	return status.Errorf(codes.Unimplemented, "method SubscribeSessionEvents not implemented")
 }
 func (UnimplementedIdentityServiceServer) mustEmbedUnimplementedIdentityServiceServer() {}
 func (UnimplementedIdentityServiceServer) testEmbeddedByValue()                         {}
@@ -328,6 +357,17 @@ func _IdentityService_ListUserSessions_Handler(srv interface{}, ctx context.Cont
 	return interceptor(ctx, in, info, handler)
 }
 
+func _IdentityService_SubscribeSessionEvents_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(SubscribeSessionEventsRequest)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(IdentityServiceServer).SubscribeSessionEvents(m, &grpc.GenericServerStream[SubscribeSessionEventsRequest, SessionEvent]{ServerStream: stream})
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type IdentityService_SubscribeSessionEventsServer = grpc.ServerStreamingServer[SessionEvent]
+
 // IdentityService_ServiceDesc is the grpc.ServiceDesc for IdentityService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -364,6 +404,12 @@ var IdentityService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _IdentityService_ListUserSessions_Handler,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "SubscribeSessionEvents",
+			Handler:       _IdentityService_SubscribeSessionEvents_Handler,
+			ServerStreams: true,
+		},
+	},
 	Metadata: "proto/identity/identity.proto",
 }
