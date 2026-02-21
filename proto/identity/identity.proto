@@ -27,6 +27,10 @@ service IdentityService {
 
   // ListUserSessions lists active sessions for a user.
   rpc ListUserSessions(ListUserSessionsRequest) returns (ListUserSessionsResponse);
+
+  // SubscribeSessionEvents streams session lifecycle events.
+  // Enables real-time cache invalidation without polling.
+  rpc SubscribeSessionEvents(SubscribeSessionEventsRequest) returns (stream SessionEvent);
 }
 
 // ValidateSessionRequest contains the session token to validate.
@@ -114,4 +118,24 @@ message SessionInfo {
   int64 expires_at = 3;     // Unix timestamp
   string user_agent = 4;    // Device/browser info
   string ip_address = 5;    // Last known IP
+}
+
+// SubscribeSessionEventsRequest configures the event subscription.
+// Empty for now; filters (user_id, event types) may be added later.
+message SubscribeSessionEventsRequest {}
+
+// SessionEvent represents a session lifecycle event.
+message SessionEvent {
+  SessionEventType type = 1;
+  string token_prefix = 2;  // First N chars for identification, not full token
+  string user_id = 3;
+  int64 timestamp = 4;      // Unix timestamp when event occurred
+}
+
+// SessionEventType identifies the kind of session lifecycle event.
+enum SessionEventType {
+  SESSION_EVENT_TYPE_UNSPECIFIED = 0;
+  SESSION_EVENT_TYPE_CREATED = 1;
+  SESSION_EVENT_TYPE_REVOKED = 2;
+  SESSION_EVENT_TYPE_EXPIRED = 3;
 }

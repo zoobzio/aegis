@@ -21,6 +21,59 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+// SessionEventType identifies the kind of session lifecycle event.
+type SessionEventType int32
+
+const (
+	SessionEventType_SESSION_EVENT_TYPE_UNSPECIFIED SessionEventType = 0
+	SessionEventType_SESSION_EVENT_TYPE_CREATED     SessionEventType = 1
+	SessionEventType_SESSION_EVENT_TYPE_REVOKED     SessionEventType = 2
+	SessionEventType_SESSION_EVENT_TYPE_EXPIRED     SessionEventType = 3
+)
+
+// Enum value maps for SessionEventType.
+var (
+	SessionEventType_name = map[int32]string{
+		0: "SESSION_EVENT_TYPE_UNSPECIFIED",
+		1: "SESSION_EVENT_TYPE_CREATED",
+		2: "SESSION_EVENT_TYPE_REVOKED",
+		3: "SESSION_EVENT_TYPE_EXPIRED",
+	}
+	SessionEventType_value = map[string]int32{
+		"SESSION_EVENT_TYPE_UNSPECIFIED": 0,
+		"SESSION_EVENT_TYPE_CREATED":     1,
+		"SESSION_EVENT_TYPE_REVOKED":     2,
+		"SESSION_EVENT_TYPE_EXPIRED":     3,
+	}
+)
+
+func (x SessionEventType) Enum() *SessionEventType {
+	p := new(SessionEventType)
+	*p = x
+	return p
+}
+
+func (x SessionEventType) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (SessionEventType) Descriptor() protoreflect.EnumDescriptor {
+	return file_proto_identity_identity_proto_enumTypes[0].Descriptor()
+}
+
+func (SessionEventType) Type() protoreflect.EnumType {
+	return &file_proto_identity_identity_proto_enumTypes[0]
+}
+
+func (x SessionEventType) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use SessionEventType.Descriptor instead.
+func (SessionEventType) EnumDescriptor() ([]byte, []int) {
+	return file_proto_identity_identity_proto_rawDescGZIP(), []int{0}
+}
+
 // ValidateSessionRequest contains the session token to validate.
 type ValidateSessionRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
@@ -793,6 +846,113 @@ func (x *SessionInfo) GetIpAddress() string {
 	return ""
 }
 
+// SubscribeSessionEventsRequest configures the event subscription.
+// Empty for now; filters (user_id, event types) may be added later.
+type SubscribeSessionEventsRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SubscribeSessionEventsRequest) Reset() {
+	*x = SubscribeSessionEventsRequest{}
+	mi := &file_proto_identity_identity_proto_msgTypes[15]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SubscribeSessionEventsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SubscribeSessionEventsRequest) ProtoMessage() {}
+
+func (x *SubscribeSessionEventsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_identity_identity_proto_msgTypes[15]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SubscribeSessionEventsRequest.ProtoReflect.Descriptor instead.
+func (*SubscribeSessionEventsRequest) Descriptor() ([]byte, []int) {
+	return file_proto_identity_identity_proto_rawDescGZIP(), []int{15}
+}
+
+// SessionEvent represents a session lifecycle event.
+type SessionEvent struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Type          SessionEventType       `protobuf:"varint,1,opt,name=type,proto3,enum=aegis.identity.v1.SessionEventType" json:"type,omitempty"`
+	TokenPrefix   string                 `protobuf:"bytes,2,opt,name=token_prefix,json=tokenPrefix,proto3" json:"token_prefix,omitempty"` // First N chars for identification, not full token
+	UserId        string                 `protobuf:"bytes,3,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	Timestamp     int64                  `protobuf:"varint,4,opt,name=timestamp,proto3" json:"timestamp,omitempty"` // Unix timestamp when event occurred
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SessionEvent) Reset() {
+	*x = SessionEvent{}
+	mi := &file_proto_identity_identity_proto_msgTypes[16]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SessionEvent) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SessionEvent) ProtoMessage() {}
+
+func (x *SessionEvent) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_identity_identity_proto_msgTypes[16]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SessionEvent.ProtoReflect.Descriptor instead.
+func (*SessionEvent) Descriptor() ([]byte, []int) {
+	return file_proto_identity_identity_proto_rawDescGZIP(), []int{16}
+}
+
+func (x *SessionEvent) GetType() SessionEventType {
+	if x != nil {
+		return x.Type
+	}
+	return SessionEventType_SESSION_EVENT_TYPE_UNSPECIFIED
+}
+
+func (x *SessionEvent) GetTokenPrefix() string {
+	if x != nil {
+		return x.TokenPrefix
+	}
+	return ""
+}
+
+func (x *SessionEvent) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
+func (x *SessionEvent) GetTimestamp() int64 {
+	if x != nil {
+		return x.Timestamp
+	}
+	return 0
+}
+
 var File_proto_identity_identity_proto protoreflect.FileDescriptor
 
 const file_proto_identity_identity_proto_rawDesc = "" +
@@ -846,7 +1006,18 @@ const file_proto_identity_identity_proto_rawDesc = "" +
 	"\n" +
 	"user_agent\x18\x04 \x01(\tR\tuserAgent\x12\x1d\n" +
 	"\n" +
-	"ip_address\x18\x05 \x01(\tR\tipAddress2\xd5\x05\n" +
+	"ip_address\x18\x05 \x01(\tR\tipAddress\"\x1f\n" +
+	"\x1dSubscribeSessionEventsRequest\"\xa1\x01\n" +
+	"\fSessionEvent\x127\n" +
+	"\x04type\x18\x01 \x01(\x0e2#.aegis.identity.v1.SessionEventTypeR\x04type\x12!\n" +
+	"\ftoken_prefix\x18\x02 \x01(\tR\vtokenPrefix\x12\x17\n" +
+	"\auser_id\x18\x03 \x01(\tR\x06userId\x12\x1c\n" +
+	"\ttimestamp\x18\x04 \x01(\x03R\ttimestamp*\x96\x01\n" +
+	"\x10SessionEventType\x12\"\n" +
+	"\x1eSESSION_EVENT_TYPE_UNSPECIFIED\x10\x00\x12\x1e\n" +
+	"\x1aSESSION_EVENT_TYPE_CREATED\x10\x01\x12\x1e\n" +
+	"\x1aSESSION_EVENT_TYPE_REVOKED\x10\x02\x12\x1e\n" +
+	"\x1aSESSION_EVENT_TYPE_EXPIRED\x10\x032\xc4\x06\n" +
 	"\x0fIdentityService\x12h\n" +
 	"\x0fValidateSession\x12).aegis.identity.v1.ValidateSessionRequest\x1a*.aegis.identity.v1.ValidateSessionResponse\x12P\n" +
 	"\aGetUser\x12!.aegis.identity.v1.GetUserRequest\x1a\".aegis.identity.v1.GetUserResponse\x12^\n" +
@@ -854,7 +1025,8 @@ const file_proto_identity_identity_proto_rawDesc = "" +
 	"\rListProviders\x12'.aegis.identity.v1.ListProvidersRequest\x1a(.aegis.identity.v1.ListProvidersResponse\x12b\n" +
 	"\rRevokeSession\x12'.aegis.identity.v1.RevokeSessionRequest\x1a(.aegis.identity.v1.RevokeSessionResponse\x12q\n" +
 	"\x12RevokeUserSessions\x12,.aegis.identity.v1.RevokeUserSessionsRequest\x1a-.aegis.identity.v1.RevokeUserSessionsResponse\x12k\n" +
-	"\x10ListUserSessions\x12*.aegis.identity.v1.ListUserSessionsRequest\x1a+.aegis.identity.v1.ListUserSessionsResponseB)Z'github.com/zoobzio/aegis/proto/identityb\x06proto3"
+	"\x10ListUserSessions\x12*.aegis.identity.v1.ListUserSessionsRequest\x1a+.aegis.identity.v1.ListUserSessionsResponse\x12m\n" +
+	"\x16SubscribeSessionEvents\x120.aegis.identity.v1.SubscribeSessionEventsRequest\x1a\x1f.aegis.identity.v1.SessionEvent0\x01B)Z'github.com/zoobzio/aegis/proto/identityb\x06proto3"
 
 var (
 	file_proto_identity_identity_proto_rawDescOnce sync.Once
@@ -868,46 +1040,53 @@ func file_proto_identity_identity_proto_rawDescGZIP() []byte {
 	return file_proto_identity_identity_proto_rawDescData
 }
 
-var file_proto_identity_identity_proto_msgTypes = make([]protoimpl.MessageInfo, 15)
+var file_proto_identity_identity_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
+var file_proto_identity_identity_proto_msgTypes = make([]protoimpl.MessageInfo, 17)
 var file_proto_identity_identity_proto_goTypes = []any{
-	(*ValidateSessionRequest)(nil),     // 0: aegis.identity.v1.ValidateSessionRequest
-	(*ValidateSessionResponse)(nil),    // 1: aegis.identity.v1.ValidateSessionResponse
-	(*GetUserRequest)(nil),             // 2: aegis.identity.v1.GetUserRequest
-	(*GetUserByEmailRequest)(nil),      // 3: aegis.identity.v1.GetUserByEmailRequest
-	(*GetUserResponse)(nil),            // 4: aegis.identity.v1.GetUserResponse
-	(*ListProvidersRequest)(nil),       // 5: aegis.identity.v1.ListProvidersRequest
-	(*ListProvidersResponse)(nil),      // 6: aegis.identity.v1.ListProvidersResponse
-	(*Provider)(nil),                   // 7: aegis.identity.v1.Provider
-	(*RevokeSessionRequest)(nil),       // 8: aegis.identity.v1.RevokeSessionRequest
-	(*RevokeSessionResponse)(nil),      // 9: aegis.identity.v1.RevokeSessionResponse
-	(*RevokeUserSessionsRequest)(nil),  // 10: aegis.identity.v1.RevokeUserSessionsRequest
-	(*RevokeUserSessionsResponse)(nil), // 11: aegis.identity.v1.RevokeUserSessionsResponse
-	(*ListUserSessionsRequest)(nil),    // 12: aegis.identity.v1.ListUserSessionsRequest
-	(*ListUserSessionsResponse)(nil),   // 13: aegis.identity.v1.ListUserSessionsResponse
-	(*SessionInfo)(nil),                // 14: aegis.identity.v1.SessionInfo
+	(SessionEventType)(0),                 // 0: aegis.identity.v1.SessionEventType
+	(*ValidateSessionRequest)(nil),        // 1: aegis.identity.v1.ValidateSessionRequest
+	(*ValidateSessionResponse)(nil),       // 2: aegis.identity.v1.ValidateSessionResponse
+	(*GetUserRequest)(nil),                // 3: aegis.identity.v1.GetUserRequest
+	(*GetUserByEmailRequest)(nil),         // 4: aegis.identity.v1.GetUserByEmailRequest
+	(*GetUserResponse)(nil),               // 5: aegis.identity.v1.GetUserResponse
+	(*ListProvidersRequest)(nil),          // 6: aegis.identity.v1.ListProvidersRequest
+	(*ListProvidersResponse)(nil),         // 7: aegis.identity.v1.ListProvidersResponse
+	(*Provider)(nil),                      // 8: aegis.identity.v1.Provider
+	(*RevokeSessionRequest)(nil),          // 9: aegis.identity.v1.RevokeSessionRequest
+	(*RevokeSessionResponse)(nil),         // 10: aegis.identity.v1.RevokeSessionResponse
+	(*RevokeUserSessionsRequest)(nil),     // 11: aegis.identity.v1.RevokeUserSessionsRequest
+	(*RevokeUserSessionsResponse)(nil),    // 12: aegis.identity.v1.RevokeUserSessionsResponse
+	(*ListUserSessionsRequest)(nil),       // 13: aegis.identity.v1.ListUserSessionsRequest
+	(*ListUserSessionsResponse)(nil),      // 14: aegis.identity.v1.ListUserSessionsResponse
+	(*SessionInfo)(nil),                   // 15: aegis.identity.v1.SessionInfo
+	(*SubscribeSessionEventsRequest)(nil), // 16: aegis.identity.v1.SubscribeSessionEventsRequest
+	(*SessionEvent)(nil),                  // 17: aegis.identity.v1.SessionEvent
 }
 var file_proto_identity_identity_proto_depIdxs = []int32{
-	7,  // 0: aegis.identity.v1.ListProvidersResponse.providers:type_name -> aegis.identity.v1.Provider
-	14, // 1: aegis.identity.v1.ListUserSessionsResponse.sessions:type_name -> aegis.identity.v1.SessionInfo
-	0,  // 2: aegis.identity.v1.IdentityService.ValidateSession:input_type -> aegis.identity.v1.ValidateSessionRequest
-	2,  // 3: aegis.identity.v1.IdentityService.GetUser:input_type -> aegis.identity.v1.GetUserRequest
-	3,  // 4: aegis.identity.v1.IdentityService.GetUserByEmail:input_type -> aegis.identity.v1.GetUserByEmailRequest
-	5,  // 5: aegis.identity.v1.IdentityService.ListProviders:input_type -> aegis.identity.v1.ListProvidersRequest
-	8,  // 6: aegis.identity.v1.IdentityService.RevokeSession:input_type -> aegis.identity.v1.RevokeSessionRequest
-	10, // 7: aegis.identity.v1.IdentityService.RevokeUserSessions:input_type -> aegis.identity.v1.RevokeUserSessionsRequest
-	12, // 8: aegis.identity.v1.IdentityService.ListUserSessions:input_type -> aegis.identity.v1.ListUserSessionsRequest
-	1,  // 9: aegis.identity.v1.IdentityService.ValidateSession:output_type -> aegis.identity.v1.ValidateSessionResponse
-	4,  // 10: aegis.identity.v1.IdentityService.GetUser:output_type -> aegis.identity.v1.GetUserResponse
-	4,  // 11: aegis.identity.v1.IdentityService.GetUserByEmail:output_type -> aegis.identity.v1.GetUserResponse
-	6,  // 12: aegis.identity.v1.IdentityService.ListProviders:output_type -> aegis.identity.v1.ListProvidersResponse
-	9,  // 13: aegis.identity.v1.IdentityService.RevokeSession:output_type -> aegis.identity.v1.RevokeSessionResponse
-	11, // 14: aegis.identity.v1.IdentityService.RevokeUserSessions:output_type -> aegis.identity.v1.RevokeUserSessionsResponse
-	13, // 15: aegis.identity.v1.IdentityService.ListUserSessions:output_type -> aegis.identity.v1.ListUserSessionsResponse
-	9,  // [9:16] is the sub-list for method output_type
-	2,  // [2:9] is the sub-list for method input_type
-	2,  // [2:2] is the sub-list for extension type_name
-	2,  // [2:2] is the sub-list for extension extendee
-	0,  // [0:2] is the sub-list for field type_name
+	8,  // 0: aegis.identity.v1.ListProvidersResponse.providers:type_name -> aegis.identity.v1.Provider
+	15, // 1: aegis.identity.v1.ListUserSessionsResponse.sessions:type_name -> aegis.identity.v1.SessionInfo
+	0,  // 2: aegis.identity.v1.SessionEvent.type:type_name -> aegis.identity.v1.SessionEventType
+	1,  // 3: aegis.identity.v1.IdentityService.ValidateSession:input_type -> aegis.identity.v1.ValidateSessionRequest
+	3,  // 4: aegis.identity.v1.IdentityService.GetUser:input_type -> aegis.identity.v1.GetUserRequest
+	4,  // 5: aegis.identity.v1.IdentityService.GetUserByEmail:input_type -> aegis.identity.v1.GetUserByEmailRequest
+	6,  // 6: aegis.identity.v1.IdentityService.ListProviders:input_type -> aegis.identity.v1.ListProvidersRequest
+	9,  // 7: aegis.identity.v1.IdentityService.RevokeSession:input_type -> aegis.identity.v1.RevokeSessionRequest
+	11, // 8: aegis.identity.v1.IdentityService.RevokeUserSessions:input_type -> aegis.identity.v1.RevokeUserSessionsRequest
+	13, // 9: aegis.identity.v1.IdentityService.ListUserSessions:input_type -> aegis.identity.v1.ListUserSessionsRequest
+	16, // 10: aegis.identity.v1.IdentityService.SubscribeSessionEvents:input_type -> aegis.identity.v1.SubscribeSessionEventsRequest
+	2,  // 11: aegis.identity.v1.IdentityService.ValidateSession:output_type -> aegis.identity.v1.ValidateSessionResponse
+	5,  // 12: aegis.identity.v1.IdentityService.GetUser:output_type -> aegis.identity.v1.GetUserResponse
+	5,  // 13: aegis.identity.v1.IdentityService.GetUserByEmail:output_type -> aegis.identity.v1.GetUserResponse
+	7,  // 14: aegis.identity.v1.IdentityService.ListProviders:output_type -> aegis.identity.v1.ListProvidersResponse
+	10, // 15: aegis.identity.v1.IdentityService.RevokeSession:output_type -> aegis.identity.v1.RevokeSessionResponse
+	12, // 16: aegis.identity.v1.IdentityService.RevokeUserSessions:output_type -> aegis.identity.v1.RevokeUserSessionsResponse
+	14, // 17: aegis.identity.v1.IdentityService.ListUserSessions:output_type -> aegis.identity.v1.ListUserSessionsResponse
+	17, // 18: aegis.identity.v1.IdentityService.SubscribeSessionEvents:output_type -> aegis.identity.v1.SessionEvent
+	11, // [11:19] is the sub-list for method output_type
+	3,  // [3:11] is the sub-list for method input_type
+	3,  // [3:3] is the sub-list for extension type_name
+	3,  // [3:3] is the sub-list for extension extendee
+	0,  // [0:3] is the sub-list for field type_name
 }
 
 func init() { file_proto_identity_identity_proto_init() }
@@ -920,13 +1099,14 @@ func file_proto_identity_identity_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_proto_identity_identity_proto_rawDesc), len(file_proto_identity_identity_proto_rawDesc)),
-			NumEnums:      0,
-			NumMessages:   15,
+			NumEnums:      1,
+			NumMessages:   17,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
 		GoTypes:           file_proto_identity_identity_proto_goTypes,
 		DependencyIndexes: file_proto_identity_identity_proto_depIdxs,
+		EnumInfos:         file_proto_identity_identity_proto_enumTypes,
 		MessageInfos:      file_proto_identity_identity_proto_msgTypes,
 	}.Build()
 	File_proto_identity_identity_proto = out.File
