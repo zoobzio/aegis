@@ -1,4 +1,4 @@
-module github.com/zoobzio/aegis
+module github.com/zoobz-io/aegis
 
 go 1.24
 

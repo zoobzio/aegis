@@ -1,3 +1,0 @@
-- [ ] Tests pass (`make test`)
-- [ ] Linting passes (`make lint`)
-- [ ] New code has tests

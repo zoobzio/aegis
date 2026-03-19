@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package aegis.authorization.v1;
 
-option go_package = "github.com/zoobzio/aegis/proto/authorization";
+option go_package = "github.com/zoobz-io/aegis/proto/authorization";
 
 // AuthorizationService provides capability-based authorization across the mesh.
 // Services get tokens from morpheus (the authorization authority) and validate

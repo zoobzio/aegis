@@ -1,7 +1,7 @@
 repository:
   name: aegis
   description: Service mesh for Go microservices — mTLS everywhere, zero configuration
-  homepage: https://github.com/zoobzio/aegis
+  homepage: https://aegis.zoobz.io
   has_wiki: true
   has_downloads: true
   default_branch: main
@@ -9,6 +9,14 @@ repository:
   allow_merge_commit: false
   allow_rebase_merge: false
   delete_branch_on_merge: true
+  topics:
+    - go
+    - golang
+    - zoobzio
+    - service-mesh
+    - mtls
+    - grpc
+    - microservices
 
 branches:
   - name: main

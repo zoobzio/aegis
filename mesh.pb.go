@@ -786,7 +786,7 @@ const file_mesh_proto_rawDesc = "" +
 	"\tGetHealth\x12\x14.aegis.HealthRequest\x1a\x15.aegis.HealthResponse\x12>\n" +
 	"\vGetNodeInfo\x12\x16.aegis.NodeInfoRequest\x1a\x17.aegis.NodeInfoResponse\x12G\n" +
 	"\fSyncTopology\x12\x1a.aegis.TopologySyncRequest\x1a\x1b.aegis.TopologySyncResponse\x12D\n" +
-	"\vGetTopology\x12\x19.aegis.GetTopologyRequest\x1a\x1a.aegis.GetTopologyResponseB\x1aZ\x18github.com/zoobzio/aegisb\x06proto3"
+	"\vGetTopology\x12\x19.aegis.GetTopologyRequest\x1a\x1a.aegis.GetTopologyResponseB\x1bZ\x19github.com/zoobz-io/aegisb\x06proto3"
 
 var (
 	file_mesh_proto_rawDescOnce sync.Once

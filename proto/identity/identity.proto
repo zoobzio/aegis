@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package aegis.identity.v1;
 
-option go_package = "github.com/zoobzio/aegis/proto/identity";
+option go_package = "github.com/zoobz-io/aegis/proto/identity";
 
 // IdentityService provides identity operations for mesh services.
 // Implemented by morpheus, consumed by other services requiring authentication.
