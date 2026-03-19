@@ -1,13 +1,13 @@
 # aegis
 
-[![CI Status](https://github.com/zoobzio/aegis/workflows/CI/badge.svg)](https://github.com/zoobzio/aegis/actions/workflows/ci.yml)
-[![codecov](https://codecov.io/gh/zoobzio/aegis/graph/badge.svg?branch=main)](https://codecov.io/gh/zoobzio/aegis)
-[![Go Report Card](https://goreportcard.com/badge/github.com/zoobzio/aegis)](https://goreportcard.com/report/github.com/zoobzio/aegis)
-[![CodeQL](https://github.com/zoobzio/aegis/workflows/CodeQL/badge.svg)](https://github.com/zoobzio/aegis/security/code-scanning)
-[![Go Reference](https://pkg.go.dev/badge/github.com/zoobzio/aegis.svg)](https://pkg.go.dev/github.com/zoobzio/aegis)
-[![License](https://img.shields.io/github/license/zoobzio/aegis)](LICENSE)
-[![Go Version](https://img.shields.io/github/go-mod/go-version/zoobzio/aegis)](go.mod)
-[![Release](https://img.shields.io/github/v/release/zoobzio/aegis)](https://github.com/zoobzio/aegis/releases)
+[![CI Status](https://github.com/zoobz-io/aegis/workflows/CI/badge.svg)](https://github.com/zoobz-io/aegis/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/zoobz-io/aegis/graph/badge.svg?branch=main)](https://codecov.io/gh/zoobz-io/aegis)
+[![Go Report Card](https://goreportcard.com/badge/github.com/zoobz-io/aegis)](https://goreportcard.com/report/github.com/zoobz-io/aegis)
+[![CodeQL](https://github.com/zoobz-io/aegis/workflows/CodeQL/badge.svg)](https://github.com/zoobz-io/aegis/security/code-scanning)
+[![Go Reference](https://pkg.go.dev/badge/github.com/zoobz-io/aegis.svg)](https://pkg.go.dev/github.com/zoobz-io/aegis)
+[![License](https://img.shields.io/github/license/zoobz-io/aegis)](LICENSE)
+[![Go Version](https://img.shields.io/github/go-mod/go-version/zoobz-io/aegis)](go.mod)
+[![Release](https://img.shields.io/github/v/release/zoobz-io/aegis)](https://github.com/zoobz-io/aegis/releases)
 
 Service mesh for Go microservices — mTLS everywhere, zero configuration. Nodes discover each other, authenticate via certificates, and call domain services without managing PKI infrastructure.
 
@@ -30,7 +30,7 @@ node.StartServer()
 ## Install
 
 ```bash
-go get github.com/zoobzio/aegis
+go get github.com/zoobz-io/aegis
 ```
 
 Requires Go 1.24+.
@@ -46,8 +46,8 @@ import (
     "context"
     "log"
 
-    "github.com/zoobzio/aegis"
-    identity "github.com/zoobzio/aegis/proto/identity"
+    "github.com/zoobz-io/aegis"
+    identity "github.com/zoobz-io/aegis/proto/identity"
     "google.golang.org/grpc"
 )
 
@@ -117,10 +117,10 @@ aegis is the transport layer. Domain services build on top:
 
 | Package | Role |
 |---------|------|
-| [capitan](https://github.com/zoobzio/capitan) | Event coordination within a process |
-| [herald](https://github.com/zoobzio/herald) | Bridge capitan events to message brokers (future: aegis provider) |
-| [morpheus](https://github.com/zoobzio/morpheus) | Identity service — implements `IdentityService` |
-| [vicky](https://github.com/zoobzio/vicky) | Storage service — consumes identity via mesh |
+| [capitan](https://github.com/zoobz-io/capitan) | Event coordination within a process |
+| [herald](https://github.com/zoobz-io/herald) | Bridge capitan events to message brokers (future: aegis provider) |
+| [morpheus](https://github.com/zoobz-io/morpheus) | Identity service — implements `IdentityService` |
+| [vicky](https://github.com/zoobz-io/vicky) | Storage service — consumes identity via mesh |
 
 ## Documentation
 
@@ -139,7 +139,7 @@ aegis is the transport layer. Domain services build on top:
 **Reference**
 - [API](docs/3.reference/1.api.md) — Function signatures
 - [Types](docs/3.reference/2.types.md) — Type definitions
-- [pkg.go.dev](https://pkg.go.dev/github.com/zoobzio/aegis) — Generated documentation
+- [pkg.go.dev](https://pkg.go.dev/github.com/zoobz-io/aegis) — Generated documentation
 
 ## Contributing
 

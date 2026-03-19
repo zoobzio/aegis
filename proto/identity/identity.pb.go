@@ -1026,7 +1026,7 @@ const file_proto_identity_identity_proto_rawDesc = "" +
 	"\rRevokeSession\x12'.aegis.identity.v1.RevokeSessionRequest\x1a(.aegis.identity.v1.RevokeSessionResponse\x12q\n" +
 	"\x12RevokeUserSessions\x12,.aegis.identity.v1.RevokeUserSessionsRequest\x1a-.aegis.identity.v1.RevokeUserSessionsResponse\x12k\n" +
 	"\x10ListUserSessions\x12*.aegis.identity.v1.ListUserSessionsRequest\x1a+.aegis.identity.v1.ListUserSessionsResponse\x12m\n" +
-	"\x16SubscribeSessionEvents\x120.aegis.identity.v1.SubscribeSessionEventsRequest\x1a\x1f.aegis.identity.v1.SessionEvent0\x01B)Z'github.com/zoobzio/aegis/proto/identityb\x06proto3"
+	"\x16SubscribeSessionEvents\x120.aegis.identity.v1.SubscribeSessionEventsRequest\x1a\x1f.aegis.identity.v1.SessionEvent0\x01B*Z(github.com/zoobz-io/aegis/proto/identityb\x06proto3"
 
 var (
 	file_proto_identity_identity_proto_rawDescOnce sync.Once

@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package aegis;
 
-option go_package = "github.com/zoobzio/aegis";
+option go_package = "github.com/zoobz-io/aegis";
 
 service MeshService {
   // Core mesh primitives

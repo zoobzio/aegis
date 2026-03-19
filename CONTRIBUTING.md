@@ -4,7 +4,7 @@
 
 ```bash
 # Clone the repository
-git clone https://github.com/zoobzio/aegis.git
+git clone https://github.com/zoobz-io/aegis.git
 cd aegis
 
 # Install development tools

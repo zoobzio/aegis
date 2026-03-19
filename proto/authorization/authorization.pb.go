@@ -416,7 +416,7 @@ const file_proto_authorization_authorization_proto_rawDesc = "" +
 	"\bGetToken\x12'.aegis.authorization.v1.GetTokenRequest\x1a(.aegis.authorization.v1.GetTokenResponse\x12l\n" +
 	"\rRegisterGuard\x12,.aegis.authorization.v1.RegisterGuardRequest\x1a-.aegis.authorization.v1.RegisterGuardResponse\x12l\n" +
 	"\rValidateGuard\x12,.aegis.authorization.v1.ValidateGuardRequest\x1a-.aegis.authorization.v1.ValidateGuardResponse\x12f\n" +
-	"\vRevokeToken\x12*.aegis.authorization.v1.RevokeTokenRequest\x1a+.aegis.authorization.v1.RevokeTokenResponseB.Z,github.com/zoobzio/aegis/proto/authorizationb\x06proto3"
+	"\vRevokeToken\x12*.aegis.authorization.v1.RevokeTokenRequest\x1a+.aegis.authorization.v1.RevokeTokenResponseB/Z-github.com/zoobz-io/aegis/proto/authorizationb\x06proto3"
 
 var (
 	file_proto_authorization_authorization_proto_rawDescOnce sync.Once

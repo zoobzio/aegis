@@ -15,10 +15,12 @@ jobs:
         go-version: ['1.24', '1.25']
     steps:
     - uses: actions/checkout@v4
+
     - name: Set up Go
       uses: actions/setup-go@v5
       with:
         go-version: ${{ matrix.go-version }}
+
     - name: Test
       run: make test
 
@@ -27,10 +29,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
+
     - name: Set up Go
       uses: actions/setup-go@v5
       with:
         go-version: '1.25'
+
     - name: golangci-lint
       uses: golangci/golangci-lint-action@v7
       with:
@@ -45,14 +49,17 @@ jobs:
       security-events: write
     steps:
     - uses: actions/checkout@v4
+
     - name: Set up Go
       uses: actions/setup-go@v5
       with:
         go-version: '1.25'
+
     - name: Run Gosec
-      uses: securego/gosec@v2.22.11
+      uses: securego/gosec@master
       with:
         args: '-fmt sarif -out gosec-results.sarif --no-fail ./...'
+
     - name: Upload SARIF
       uses: github/codeql-action/upload-sarif@v3
       if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
@@ -60,26 +67,9 @@ jobs:
       with:
         sarif_file: gosec-results.sarif
 
-  benchmark:
-    name: Benchmark
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-    - name: Set up Go
-      uses: actions/setup-go@v5
-      with:
-        go-version: '1.25'
-    - name: Run benchmarks
-      run: make test-bench | tee benchmark_results.txt
-    - name: Upload results
-      uses: actions/upload-artifact@v4
-      with:
-        name: benchmark-results
-        path: benchmark_results.txt
-
   ci-complete:
     name: CI Complete
-    needs: [test, lint, security, benchmark]
+    needs: [test, lint, security]
     runs-on: ubuntu-latest
     steps:
     - run: echo "CI complete"

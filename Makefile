@@ -54,7 +54,7 @@ install-hooks: ## Install git pre-commit hook
 check: lint test security ## Run lint, tests, and security scan
 	@echo "All checks passed!"
 
-ci: clean check coverage test-bench ## Full CI simulation
+ci: clean check coverage ## Full CI simulation
 	@echo "CI simulation complete!"
 
 proto: ## Regenerate protobuf code
